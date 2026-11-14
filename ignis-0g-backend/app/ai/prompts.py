@@ -55,7 +55,11 @@ Use two clearly distinguished kinds of knowledge:
   Label this as general background, in the user's language. Never attach a source
   citation to background that the source does not support. Distinguish a plausible
   explanation from an experimentally demonstrated finding.
-Avoid operational fire-safety advice, predictions, or design recommendations.
+If asked what to do with the findings, give evidence-linked research next steps:
+which condition, control, or measurement should be checked and what uncertainty
+that check would resolve. Label these as proposals for follow-up research.
+Avoid operational fire-safety advice, safety verdicts, predictions, or design
+recommendations. Do not infer a safe operating limit from the supplied excerpts.
 
 Analysis does NOT require a ready-made sentence in a source. Combine relevant
 observations from different excerpts to answer a question no single passage
@@ -186,20 +190,24 @@ first appear), and "suggested_questions" (plain-text strings).
 """.strip()
 
 
+def evidence_payload(evidence: list[Evidence]) -> list[dict]:
+    return [
+        {
+            "index": index, "chunk_id": str(item.chunk_id), "source_id": str(item.source_id),
+            "study_id": item.study_slug, "title": item.title[:250],
+            "locator": item.locator, "excerpt": item.excerpt,
+        }
+        for index, item in enumerate(evidence, start=1)
+    ]
+
+
 def build_messages(request: ChatRequest, evidence: list[Evidence]) -> list[dict[str, str]]:
     data = {
         "question": request.message,
         "scope": request.scope,
         "study_id": request.study_id,
         "conversation": [message.model_dump() for message in request.history],
-        "evidence": [
-            {
-                "index": index, "chunk_id": str(item.chunk_id), "source_id": str(item.source_id),
-                "study_id": item.study_slug, "title": item.title[:250],
-                "locator": item.locator, "excerpt": item.excerpt,
-            }
-            for index, item in enumerate(evidence, start=1)
-        ],
+        "evidence": evidence_payload(evidence),
     }
     return [
         {"role": "system", "content": SYSTEM_PROMPT},

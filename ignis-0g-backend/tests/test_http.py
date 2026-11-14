@@ -1,5 +1,6 @@
 import asyncio
 import importlib
+import json
 import httpx
 import pytest
 from app.main import app, rate_windows
@@ -12,6 +13,7 @@ def test_http_contract(monkeypatch):
         return insufficient_evidence()
 
     monkeypatch.setattr(importlib.import_module('app.main'), 'ask', assistant_stub)
+    monkeypatch.setattr(importlib.import_module('app.main'), 'ASSISTANT_REQUESTS_PER_MINUTE', 15)
     async def run():
         rate_windows.clear()
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),base_url='http://test',headers={'Origin':'http://localhost:5173'}) as client:
@@ -23,9 +25,9 @@ def test_http_contract(monkeypatch):
             r=await client.post('/api/v1/assistant/chat',content=b'x'*32769)
             assert r.status_code==413
             rate_windows.clear()
-            for _ in range(5):
+            for _ in range(15):
                 assert (await client.post('/api/v1/assistant/chat',json={'message':'hi'})).status_code==200
-            r=await client.post('/api/v1/assistant/chat',json={'message':'hi'})
+            r=await client.post('/api/v1/assistant/chat/stream',json={'message':'hi'})
             assert r.status_code==429 and int(r.headers['retry-after'])>0
             rate_windows.clear()
             r=await client.options('/api/v1/studies',headers={'Access-Control-Request-Method':'GET'})
@@ -35,6 +37,44 @@ def test_http_contract(monkeypatch):
             monkeypatch.setattr(importlib.import_module('app.repositories.catalog'),'filters',broken)
             r=await client.get('/api/v1/catalog/filters')
             assert r.status_code==500 and 'secret' not in r.text
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize('timeout', [False, True])
+def test_chat_event_stream(monkeypatch, timeout):
+    from app.ai.providers import ProviderTimeout
+    from app.ai.service import insufficient_evidence
+
+    main = importlib.import_module('app.main')
+
+    async def ask_stub(payload):
+        if timeout:
+            raise ProviderTimeout()
+        return insufficient_evidence(payload.message)
+
+    monkeypatch.setattr(main, 'ask', ask_stub)
+    monkeypatch.setattr(main, 'rate_windows', {})
+
+    async def run():
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url='http://test') as client:
+            invalid = await client.post('/api/v1/assistant/chat/stream', json={'message': ' '})
+            assert invalid.status_code == 422
+            response = await client.post('/api/v1/assistant/chat/stream', json={'message': 'Explain results'})
+        assert response.status_code == 200
+        assert response.headers['content-type'].startswith('text/event-stream')
+        assert response.headers['x-accel-buffering'] == 'no'
+        events = {}
+        for block in response.text.replace('\r\n', '\n').strip().split('\n\n'):
+            fields = dict(line.split(': ', 1) for line in block.splitlines())
+            events[fields['event']] = json.loads(fields['data'])
+        assert events['accepted']['request_id'] == response.headers['x-request-id']
+        if timeout:
+            assert list(events) == ['accepted', 'error']
+            assert events['error']['error']['code'] == 'AI_TIMEOUT'
+        else:
+            assert list(events) == ['accepted', 'result']
+            assert events['result']['status'] == 'insufficient_evidence'
+
     asyncio.run(run())
 
 

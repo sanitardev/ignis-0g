@@ -224,6 +224,15 @@ def test_named_retrieval_recovers_a_study_outside_vector_top_k(monkeypatch):
                 scoped = await repository.search(ChatRequest(message="Compare ORION and LYRA", study_id="orion"), vector, revision, 4)
                 assert all(row.study_slug == "orion" for row in scoped)
                 assert await repository.search(ChatRequest(message="ORION"), vector, "stale-revision", 4) == []
+                selected = ["lyra", "orion", "missing"]
+                assert await repository.indexed_studies(selected, revision) == {"lyra", "orion"}
+                comparison = await repository.search_comparison(selected, "hardware", vector, revision, 2)
+                assert {row.study_slug for row in comparison} == {"lyra", "orion"}
+                assert all(row.locator == "Hardware" for row in comparison)
+                assert await repository.indexed_studies(selected, "stale-revision") == set()
+                assert await repository.search_comparison(["lyra"], "hardware", vector, revision, 1) == [
+                    next(row for row in comparison if row.study_slug == "lyra")
+                ]
             finally:
                 await transaction.rollback()
         await engine.dispose()

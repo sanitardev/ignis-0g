@@ -39,6 +39,9 @@ _SEARCH = text("""
 """)
 
 _STUDIES = text("SELECT DISTINCT st.slug " + _CURRENT_CHUNKS)
+_INDEXED_COMPARISON_STUDIES = text(
+    "SELECT DISTINCT st.slug " + _CURRENT_CHUNKS + " AND st.slug = ANY(CAST(:target_slugs AS text[]))"
+)
 _TARGETED_SEARCH = text("""
     SELECT chunk_id, source_id, study_slug, title, url, excerpt, locator
     FROM (
@@ -116,6 +119,23 @@ def _filters(request: ChatRequest, revision: str) -> dict:
 
 
 class PgVectorRepository:
+    async def indexed_studies(self, slugs: list[str], revision: str) -> set[str]:
+        async with session_factory() as session:
+            rows = await session.scalars(_INDEXED_COMPARISON_STUDIES, {
+                "scope_slug": None, "target_slugs": slugs, "revision": revision,
+            })
+            return set(rows)
+
+    async def search_comparison(
+        self, slugs: list[str], query: str, vector: str, revision: str, limit: int,
+    ) -> list[Evidence]:
+        async with session_factory() as session:
+            rows = await session.execute(_TARGETED_SEARCH, {
+                "scope_slug": None, "target_slugs": slugs, "revision": revision,
+                "embedding": vector, "section_pattern": section_pattern(query), "limit": limit,
+            })
+            return [Evidence(**row) for row in rows.mappings()]
+
     async def has_chunks(self, request: ChatRequest, revision: str) -> bool:
         async with session_factory() as session:
             return bool(await session.scalar(_HAS_CHUNKS, _filters(request, revision)))

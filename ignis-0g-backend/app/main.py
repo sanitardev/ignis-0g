@@ -2,11 +2,15 @@ import logging
 import os
 import time
 import asyncio
+from collections.abc import AsyncIterator, Awaitable, Callable
+from math import ceil
+from typing import TypeVar
 from uuid import UUID, uuid4
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.sse import EventSourceResponse, ServerSentEvent
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from app.schemas.common import ErrorResponse, Health
@@ -14,6 +18,7 @@ from app.schemas.study import Finding, Source, Media
 from app.schemas.assistant import CompareRequest, CompareResponse
 from app.schemas.nexus import Relation, Graph
 from app.repositories import nexus
+from app.ai.comparison import compare as compare_studies
 from app.ai.providers import ProviderTimeout, ProviderUnavailable
 from app.ai.service import ask
 from app.schemas.assistant import ChatRequest, ChatResponse
@@ -28,10 +33,18 @@ app = FastAPI(title='IGNIS 0G API', version='0.1.0', lifespan=lifespan, response
 app.add_middleware(CORSMiddleware, allow_origins=os.getenv('CORS_ORIGINS','http://localhost:5173,http://127.0.0.1:5173').split(','), allow_methods=['GET','POST'], allow_headers=['Content-Type'], expose_headers=['X-Request-ID','Retry-After'])
 rate_windows = {}
 CHAT_TIMEOUT_SECONDS = 25
+ASSISTANT_REQUESTS_PER_MINUTE = max(1, int(os.getenv('ASSISTANT_REQUESTS_PER_MINUTE', '15')))
+ASSISTANT_SYNC_PATHS = {'/api/v1/assistant/chat', '/api/v1/assistant/compare'}
+AssistantRequest = TypeVar('AssistantRequest', ChatRequest, CompareRequest)
+AssistantResponse = TypeVar('AssistantResponse', ChatResponse, CompareResponse)
+
+
+def error_payload(request: Request, code: str, message: str, details=None):
+    return {'error': {'code': code, 'message': message, 'request_id': request.state.request_id, 'details': details or []}}
 
 
 def error(request: Request, status: int, code: str, message: str, details=None):
-    return JSONResponse(status_code=status, content={'error': {'code': code, 'message': message, 'request_id': request.state.request_id, 'details': details or []}})
+    return JSONResponse(status_code=status, content=error_payload(request, code, message, details))
 
 @app.middleware('http')
 async def request_id(request: Request, call_next):
@@ -52,10 +65,10 @@ async def request_id(request: Request, call_next):
                     del rate_windows[key]
             client = request.client.host if request.client else 'unknown'
             start, count = rate_windows.get(client, (now, 0))
-            if count >= 5:
-                raise HTTPException(429, ('RATE_LIMITED','Request limit exceeded'), headers={'Retry-After':str(max(1,int(60-(now-start))))})
+            if count >= ASSISTANT_REQUESTS_PER_MINUTE:
+                raise HTTPException(429, ('RATE_LIMITED','Request limit exceeded'), headers={'Retry-After':str(max(1,ceil(60-(now-start))))})
             rate_windows[client] = (start,count+1)
-        timeout = CHAT_TIMEOUT_SECONDS + 5 if request.url.path == '/api/v1/assistant/chat' else 10
+        timeout = CHAT_TIMEOUT_SECONDS + 5 if request.url.path in ASSISTANT_SYNC_PATHS else 10
         async with asyncio.timeout(timeout):
             response = await call_next(request)
     except HTTPException as exc:
@@ -108,13 +121,39 @@ async def dataset(study_id: str, dataset_id: UUID):
 async def chat(request: ChatRequest):
     if request.study_id is not None:
         await repository.require_study(request.study_id)
+    return await run_assistant(ask, request)
+
+
+async def run_assistant(
+    operation: Callable[[AssistantRequest], Awaitable[AssistantResponse]], request: AssistantRequest,
+) -> AssistantResponse:
     try:
         async with asyncio.timeout(CHAT_TIMEOUT_SECONDS):
-            return await ask(request)
+            return await operation(request)
     except (ProviderTimeout, TimeoutError):
         raise HTTPException(504, ('AI_TIMEOUT', 'Assistant request timed out')) from None
     except ProviderUnavailable:
         raise HTTPException(503, ('AI_UNAVAILABLE', 'Assistant unavailable')) from None
+
+
+@app.post('/api/v1/assistant/chat/stream', response_class=EventSourceResponse)
+async def chat_stream(payload: ChatRequest, request: Request) -> AsyncIterator[ServerSentEvent]:
+    yield ServerSentEvent(event='accepted', data={'request_id': request.state.request_id})
+    try:
+        async with asyncio.timeout(CHAT_TIMEOUT_SECONDS):
+            result = await chat(payload)
+    except HTTPException as exc:
+        code, message = exc.detail
+        yield ServerSentEvent(event='error', data=error_payload(request, code, message))
+    except TimeoutError:
+        yield ServerSentEvent(event='error', data=error_payload(request, 'AI_TIMEOUT', 'Assistant request timed out'))
+    except (SQLAlchemyError, OSError):
+        yield ServerSentEvent(event='error', data=error_payload(request, 'DATABASE_UNAVAILABLE', 'Database unavailable'))
+    except Exception:
+        logging.getLogger(__name__).error('Unhandled stream error request_id=%s', request.state.request_id)
+        yield ServerSentEvent(event='error', data=error_payload(request, 'INTERNAL_ERROR', 'Internal server error'))
+    else:
+        yield ServerSentEvent(event='result', data=result)
 
 @app.get('/health', response_model=Health)
 async def health(request: Request):
@@ -146,7 +185,7 @@ async def graph(study_id: str | None = None, depth: int = Query(1, ge=1, le=2)):
 async def compare(request: CompareRequest):
     for study_id in request.study_ids:
         await repository.require_study(study_id)
-    return CompareResponse(status='insufficient_evidence',summary='AI comparison is not enabled.',similarities=[],differences=[],limitations=['AI integration is pending.'],citations=[])
+    return await run_assistant(compare_studies, request)
 
 
 @app.get("/chat", include_in_schema=False)
