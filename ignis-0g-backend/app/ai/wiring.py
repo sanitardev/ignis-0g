@@ -15,10 +15,18 @@ async def configured_providers(settings: RagSettings):
     async with httpx.AsyncClient(trust_env=False) as client:
         base_url = getenv("LLM_BASE_URL", "https://llm.alem.ai/v1")
         key = getenv("LLM_API_KEY", "")
+        model = getenv("LLM_MODEL", "qwen3-8")
+        fallback_model = getenv("LLM_FALLBACK_MODEL")
+        fallback = (
+            RemoteLLM(
+                JsonAPI(client, base_url, key, settings.llm_fallback_timeout, 0),
+                fallback_model, settings.max_output_tokens,
+            )
+            if fallback_model and fallback_model != model else None
+        )
         llm = RemoteLLM(
-            JsonAPI(client, base_url, key, settings.timeout, settings.retries),
-            getenv("LLM_MODEL", "qwen3-8"),
-            settings.max_output_tokens,
+            JsonAPI(client, base_url, key, settings.llm_timeout, 0),
+            model, settings.max_output_tokens, fallback=fallback,
         )
         embedding_url = getenv("EMBEDDING_BASE_URL")
         embedding_key = getenv("EMBEDDING_API_KEY", "")

@@ -156,6 +156,7 @@ def test_reindex_on_model_change_and_keep_old_index_when_provider_fails(monkeypa
 
                 replacement.vector = original.vector
                 assert await ingestion.index_sources(replacement, settings) == 2
+                llm.responses.insert(0, {"status": "insufficient_evidence", "answer": "", "citation_indices": []})
                 assert (await rag.ask(request)).status == "insufficient_evidence"
                 updated = await RagService(replacement, None, llm, settings, repository).ask(request)
                 assert updated.citations[0].chunk_id != first.citations[0].chunk_id
@@ -246,7 +247,8 @@ def test_context_skips_duplicate_passages_and_uses_distinct_sections():
 
 
 @pytest.mark.parametrize("answer,indices", [
-    ("Claim without a citation.", [1]),
+    ("", [1]),
+    ("Claim without a citation.", []),
     ("Claim [1], other claim [9].", [1]),
     ("Claim [1](https://example.org/forged).", [1]),
 ])
@@ -383,3 +385,53 @@ def test_missing_fact_can_offer_targeted_questions_without_claims():
     assert result.citations == []
     assert "unsupported guess" not in result.answer
     assert result.suggested_questions == ["How was the experiment set up?"]
+
+
+def test_generation_timeout_is_separate_from_retrieval(monkeypatch):
+    from app.ai.settings import settings_from_env
+    from app.ai.wiring import configured_providers
+
+    monkeypatch.setenv("RAG_TIMEOUT", "10")
+    monkeypatch.setenv("RAG_LLM_TIMEOUT", "11")
+    monkeypatch.setenv("RERANKER_MODEL", "test-reranker")
+
+    async def run():
+        async with configured_providers(settings_from_env()) as (embedding, reranker, llm):
+            assert embedding.api.timeout == reranker.api.timeout == 10
+            assert llm.api.timeout == 11
+
+    asyncio.run(run())
+
+
+def test_generation_switches_models_after_timeout_or_truncation():
+    import json
+
+    import httpx
+
+    from app.ai.llm import RemoteLLM
+    from app.ai.providers import JsonAPI
+
+    async def run():
+        models = []
+
+        def respond(request):
+            model = json.loads(request.content)["model"]
+            models.append(model)
+            if model == "primary":
+                if models.count("primary") == 1:
+                    raise httpx.ReadTimeout("simulated timeout")
+                return httpx.Response(200, json={"choices": [{"finish_reason": "length"}]})
+            return httpx.Response(200, json={"choices": [{
+                "finish_reason": "stop", "message": {"content": '{"answer":"complete"}'},
+            }]})
+
+        async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as client:
+            llm = RemoteLLM(
+                JsonAPI(client, "https://openrouter.ai/api/v1", "mock", 1, 0), "primary", 3200,
+                fallback=RemoteLLM(JsonAPI(client, "https://openrouter.ai/api/v1", "mock", 1, 0), "backup", 3200),
+            )
+            for _ in range(2):
+                assert await llm.generate([{"role": "user", "content": "test"}]) == {"answer": "complete"}
+        assert models == ["primary", "backup", "primary", "backup"]
+
+    asyncio.run(run())

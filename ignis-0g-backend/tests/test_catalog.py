@@ -9,7 +9,13 @@ from app.repositories import catalog
 from app.models import Study, Source, Finding, Dataset
 
 
-def test_database_api():
+def test_database_api(monkeypatch):
+    from app.ai.llm import RemoteLLM
+
+    async def no_fact(self, messages):
+        return {"status": "insufficient_evidence", "answer": "", "citation_indices": []}
+
+    monkeypatch.setattr(RemoteLLM, "generate", no_fact)
     async def run():
         async with engine.connect() as connection:
             transaction = await connection.begin()
@@ -40,7 +46,7 @@ def test_database_api():
                     r = await client.get(f'/api/v1/studies/{key}-b/datasets/{dataset_id}'); assert r.status_code==404
                     r = await client.get('/api/v1/studies/'+key+'/datasets/invalid'); assert r.status_code==422
                     r = await client.get('/api/v1/catalog/filters'); assert key in r.json()['categories']
-                    r = await client.post('/api/v1/assistant/chat', json={'message':'hello','study_id':key}); assert r.json()['status']=='insufficient_evidence'
+                    r = await client.post('/api/v1/assistant/chat', json={'message':'What was the serial number of the apparatus?','study_id':key}); assert r.json()['status']=='insufficient_evidence'
                     r = await client.get('/api/v1/studies/missing-'+key); assert r.status_code==404 and r.json()['error']['request_id']==r.headers['x-request-id']
             finally:
                 catalog.session_factory = original

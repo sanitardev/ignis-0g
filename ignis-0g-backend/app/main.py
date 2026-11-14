@@ -27,6 +27,8 @@ from sqlalchemy.exc import SQLAlchemyError
 app = FastAPI(title='IGNIS 0G API', version='0.1.0', lifespan=lifespan, responses={code: {'model': ErrorResponse} for code in [404,405,413,422,429,500,503,504]})
 app.add_middleware(CORSMiddleware, allow_origins=os.getenv('CORS_ORIGINS','http://localhost:5173,http://127.0.0.1:5173').split(','), allow_methods=['GET','POST'], allow_headers=['Content-Type'], expose_headers=['X-Request-ID','Retry-After'])
 rate_windows = {}
+CHAT_TIMEOUT_SECONDS = 25
+
 
 def error(request: Request, status: int, code: str, message: str, details=None):
     return JSONResponse(status_code=status, content={'error': {'code': code, 'message': message, 'request_id': request.state.request_id, 'details': details or []}})
@@ -53,7 +55,7 @@ async def request_id(request: Request, call_next):
             if count >= 5:
                 raise HTTPException(429, ('RATE_LIMITED','Request limit exceeded'), headers={'Retry-After':str(max(1,int(60-(now-start))))})
             rate_windows[client] = (start,count+1)
-        timeout = 40 if request.url.path == '/api/v1/assistant/chat' else 10
+        timeout = CHAT_TIMEOUT_SECONDS + 5 if request.url.path == '/api/v1/assistant/chat' else 10
         async with asyncio.timeout(timeout):
             response = await call_next(request)
     except HTTPException as exc:
@@ -107,7 +109,7 @@ async def chat(request: ChatRequest):
     if request.study_id is not None:
         await repository.require_study(request.study_id)
     try:
-        async with asyncio.timeout(35):
+        async with asyncio.timeout(CHAT_TIMEOUT_SECONDS):
             return await ask(request)
     except (ProviderTimeout, TimeoutError):
         raise HTTPException(504, ('AI_TIMEOUT', 'Assistant request timed out')) from None

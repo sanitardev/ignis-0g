@@ -1,15 +1,16 @@
+import asyncio
 import logging
 import re
 from time import monotonic
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from app.ai.embeddings import vector_parameter
 from app.ai.ingestion import index_revision
 from app.ai.prompts import build_messages, rewrite_messages
 from app.ai.providers import EmbeddingProvider, LLMProvider, ProviderUnavailable, RerankerProvider
-from app.ai.retrieval import Evidence, PgVectorRepository
+from app.ai.retrieval import Evidence, PgVectorRepository, named_studies, section_pattern
 from app.ai.settings import RagSettings, settings_from_env
 from app.ai.wiring import configured_providers
 from app.schemas.assistant import ChatRequest, ChatResponse, Citation
@@ -21,7 +22,9 @@ logger = logging.getLogger("uvicorn.error.rag")
 class GroundedAnswer(BaseModel):
     model_config = ConfigDict(strict=True)
     status: Literal["answered", "insufficient_evidence"]
+    basis: Literal["sources", "general_knowledge"] = "sources"
     answer: str
+    citation_indices: list[int] = Field(default_factory=list)
     suggested_questions: object = None
 
 
@@ -42,6 +45,19 @@ def insufficient_evidence(
     )
 
 
+def invalid_answer(question: str, reason: str) -> ChatResponse:
+    # Keep the public status contract, but never describe a formatting failure
+    # as a lack of scientific evidence. Log the cause without source content.
+    logging.getLogger(__name__).warning("Answer validation failed: %s", reason)
+    response = insufficient_evidence(question)
+    response.answer = (
+        "Не удалось проверить формат ответа и ссылки на источники. Повторите запрос."
+        if re.search(r"[А-Яа-яЁё]", question)
+        else "Could not verify the answer format and source references. Please try again."
+    )
+    return response
+
+
 class RagService:
     def __init__(
         self, embedding: EmbeddingProvider, reranker: RerankerProvider | None,
@@ -58,15 +74,19 @@ class RagService:
         revision = index_revision(self.embedding, self.settings)
         if not await self.repository.has_chunks(request, revision):
             logger.info("rag outcome=no_index")
-            return insufficient_evidence(request.message)
+            return validate_answer(await self.llm.generate(build_messages(request, [])), [], request.message)
 
         query = request.message
-        if request.history:
+        if request.history and needs_rewrite(request.message):
             try:
-                rewritten = await self.llm.generate(rewrite_messages(request))
-            except ProviderUnavailable:
+                async with asyncio.timeout(2.5):
+                    rewritten = await self.llm.generate(rewrite_messages(request))
+            except (ProviderUnavailable, TimeoutError):
                 logger.info("rag stage=rewrite outcome=fallback")
                 rewritten = None
+            # Only a reference-dependent question may borrow the previous topic.
+            previous = next((item.content for item in reversed(request.history) if item.role == "user"), "")
+            query = (request.message + "\n" + previous[:500]).strip()
             if isinstance(rewritten, dict) and isinstance(rewritten.get("query"), str):
                 candidate = rewritten["query"].strip()
                 if 0 < len(candidate) <= 2000:
@@ -74,23 +94,25 @@ class RagService:
 
         logger.info("rag stage=embedding")
         vector = vector_parameter(await self.embedding.embed_query(query))
-        evidence = await self.repository.search(request, vector, revision, self.settings.candidate_limit)
+        search_request = request.model_copy(update={"message": query})
+        evidence = await self.repository.search(search_request, vector, revision, self.settings.candidate_limit)
         logger.info("rag stage=retrieval candidates=%d", len(evidence))
         if not evidence:
-            return insufficient_evidence(request.message)
+            return validate_answer(await self.llm.generate(build_messages(request, [])), [], request.message)
         if self.reranker:
             try:
-                ranking = await self.reranker.rerank(query, evidence)
+                async with asyncio.timeout(2.5):
+                    ranking = await self.reranker.rerank(query, evidence)
                 if all(type(index) is int and 0 <= index < len(evidence) for index in ranking):
                     ranking = list(dict.fromkeys(ranking))
                     ranked = set(ranking)
                     evidence = [evidence[index] for index in ranking] + [
                         item for index, item in enumerate(evidence) if index not in ranked
                     ]
-            except ProviderUnavailable:
+            except (ProviderUnavailable, TimeoutError):
                 logger.info("rag stage=rerank outcome=fallback")
 
-        context = select_context(evidence, self.settings.context_limit, diversify=request.scope == "global")
+        context = select_context(evidence, self.settings.context_limit, question=query, diversify=request.scope == "global")
         logger.info("rag stage=generation context_count=%d", len(context))
         result = validate_answer(await self.llm.generate(build_messages(request, context)), context, request.message)
         logger.info("rag outcome=%s citations=%d elapsed_ms=%d", result.status, len(result.citations), (monotonic() - started) * 1000)
@@ -98,22 +120,56 @@ class RagService:
 
 
 async def ask(request: ChatRequest) -> ChatResponse:
+    message = request.message.casefold().rstrip(".!?…").rstrip()
+    if message in {"привет", "здравствуй", "здравствуйте", "доброе утро", "добрый день", "добрый вечер"}:
+        greeting = "Привет! Чем помочь? Можно спросить об экспериментах NASA или горении в микрогравитации."
+    elif message in {"hi", "hello", "hey", "good morning", "good afternoon", "good evening"}:
+        greeting = "Hello! How can I help? Ask me about NASA experiments or combustion in microgravity."
+    else:
+        greeting = None
+
+    if greeting is not None:
+        return ChatResponse(
+            status="answered",
+            answer=greeting,
+            citations=[],
+            related_study_ids=[],
+            suggested_questions=[],
+        )
+
     settings = settings_from_env()
     async with configured_providers(settings) as (embedding, reranker, llm):
         return await RagService(embedding, reranker, llm, settings, PgVectorRepository()).ask(request)
 
 
-def select_context(evidence: list[Evidence], limit: int, *, diversify: bool = False) -> list[Evidence]:
+def needs_rewrite(question: str) -> bool:
+    return bool(re.search(
+        r"\b(это|этот|этом|этого|эти|этим|они|оно|их|его|такой|такие|там|выше|"
+        r"it|its|they|them|those|that|this|these)\b|"
+        r"^(?:а |и )?(?:почему[?!.]*|подробнее[?!.]*|объясни проще[?!.]*|продолжи[?!.]*)$|"
+        r"^(?:simplify|elaborate|continue)\b",
+        question.casefold().strip(),
+    ))
+
+
+def select_context(evidence: list[Evidence], limit: int, *, question: str = "", diversify: bool = False) -> list[Evidence]:
+    pattern = section_pattern(question)
+    evidence = sorted(evidence, key=lambda item: not re.search(pattern, item.locator or "", re.I))
+    targets = named_studies(question, [item.study_slug for item in evidence])
+    groups = [[item for item in evidence if item.study_slug == slug] for slug in targets]
+    # Reserve context for every requested study, even after reranking. Cycle
+    # through their sections so one study cannot crowd out the comparison.
+    priority = [group[i] for i in range(max(map(len, groups), default=0)) for group in groups if i < len(group)]
     selected = []
     deferred = []
-    seen_passages = set()
+    seen = set()
     seen_studies = set()
-    for item in evidence:
+    for item in priority + evidence:
         key = (item.study_slug, " ".join(item.excerpt.casefold().split()))
-        if key in seen_passages:
+        if key in seen:
             continue
-        seen_passages.add(key)
-        if diversify and item.study_slug in seen_studies:
+        seen.add(key)
+        if diversify and not targets and item.study_slug in seen_studies:
             deferred.append(item)
         else:
             selected.append(item)
@@ -152,33 +208,51 @@ def validate_answer(raw: object, evidence: list[Evidence], question: str) -> Cha
     try:
         result = GroundedAnswer.model_validate(raw)
     except ValidationError:
-        logger.info("rag stage=validation outcome=invalid_response_shape")
-        return insufficient_evidence(question)
+        return invalid_answer(question, "schema")
 
     suggestions = suggested_questions(result.suggested_questions, question)
     if result.status == "insufficient_evidence":
         return insufficient_evidence(question, suggestions=suggestions)
 
     answer = result.answer.strip()
+    try:
+        answer = normalize_citations(answer, len(evidence))
+    except ValueError:
+        return invalid_answer(question, "citation_out_of_range")
     markers = list(dict.fromkeys(re.findall(r"\[([0-9]+)\]", answer)))
-    valid_markers = {str(index) for index in range(1, len(evidence) + 1)}
-    reason = None
-    if not answer:
-        reason = 'empty_answer'
-    elif re.search(r"<(?:/?[A-Za-z]|!--)", answer):
-        reason = 'html_in_answer'
-    elif not markers:
-        reason = 'no_citations'
-    elif any(marker not in valid_markers for marker in markers):
-        reason = 'invalid_citation_indices'
-    elif re.search(r"\[[0-9]+\]\s*\([^\n)]*\)|(?m:^\s{0,3}\[[0-9]+\]:)", answer):
-        reason = 'linked_citation'
-    if reason:
-        logger.info("rag stage=validation outcome=%s", reason)
-        return insufficient_evidence(question)
+    indices = list(dict.fromkeys(result.citation_indices))
+    if result.basis == "general_knowledge":
+        if not answer or indices or markers or re.search(r"<(?:/?[A-Za-z]|!--)", answer):
+            return invalid_answer(question, "ungrounded_general_answer")
+        label = (
+            "Общие знания — пояснение вне загруженных исследований."
+            if re.search(r"[А-Яа-яЁё]", question)
+            else "General knowledge — explanation outside the uploaded studies."
+        )
+        return ChatResponse(status="answered", answer=f"{label}\n\n{answer}", citations=[],
+                            related_study_ids=[], suggested_questions=suggestions)
+    if answer and not markers and indices and all(1 <= index <= len(evidence) for index in indices):
+        # Some models populate the structured references but omit inline ones.
+        # Preserve those references as answer-level sources; do not guess which
+        # source supports each sentence, or silently discard mismatched markers.
+        label = "Источники ответа" if re.search(r"[А-Яа-яЁё]", question) else "Answer sources"
+        markers = [str(index) for index in indices]
+        answer += f"\n\n{label}: " + " ".join(f"[{marker}]" for marker in markers)
+    if (
+        not answer
+        or re.search(r"<(?:/?[A-Za-z]|!--)", answer)
+        or not markers
+        or any(not 1 <= index <= len(evidence) for index in indices)
+        or re.search(r"\[[0-9]+\]\([^\n)]*\)|(?m:^\s{0,3}\[[0-9]+\]:)", answer)
+    ):
+        return invalid_answer(question, "invalid_answer_or_references")
 
-    cited = [evidence[int(marker) - 1] for marker in markers]
-    renumber = {marker: str(number) for number, marker in enumerate(markers, start=1)}
+    # Inline markers identify which evidence the text actually cites. The
+    # redundant JSON list may omit or repeat valid IDs, or include unused ones.
+    # Both representations have already been checked against retrieved chunks.
+    indices = [int(marker) for marker in markers]
+    cited = [evidence[index - 1] for index in indices]
+    renumber = {str(index): str(number) for number, index in enumerate(indices, start=1)}
     answer = re.sub(r"\[([0-9]+)\]", lambda match: f"[{renumber[match[1]]}]", answer)
     citations = [
         Citation(
@@ -194,3 +268,21 @@ def validate_answer(raw: object, evidence: list[Evidence], question: str) -> Cha
         related_study_ids=list(dict.fromkeys(item.study_slug for item in cited)),
         suggested_questions=suggestions,
     )
+
+
+def normalize_citations(answer: str, count: int) -> str:
+    def replace(match: re.Match) -> str:
+        indices = []
+        for group in match[1].split(","):
+            parts = re.split(r"\s*[-–]\s*", group.strip())
+            if len(parts) > 2 or not all(part.isdecimal() for part in parts):
+                raise ValueError("Invalid citation")
+            start, end = int(parts[0]), int(parts[-1])
+            if not 1 <= start <= end <= count:
+                raise ValueError("Citation outside retrieved evidence")
+            indices.extend(range(start, end + 1))
+        return "".join(f"[{index}]" for index in dict.fromkeys(indices))
+
+    # Normalize grouped and ranged references before checking their IDs; never
+    # remove invalid IDs to make an unsupported response appear grounded.
+    return re.sub(r"\[([0-9][0-9,\s–-]*)\]", replace, answer)

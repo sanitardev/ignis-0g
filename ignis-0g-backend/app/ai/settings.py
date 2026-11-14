@@ -10,6 +10,8 @@ class RagSettings(BaseModel):
     context_limit: int = Field(5, ge=1, le=20)
     batch_size: int = Field(32, ge=1, le=128)
     timeout: float = Field(4, gt=0, le=30)
+    llm_timeout: float = Field(10, gt=0, le=25)
+    llm_fallback_timeout: float = Field(8, gt=0, le=25)
     max_output_tokens: int = Field(3200, ge=128, le=16384)
     retries: int = Field(1, ge=0, le=2)
 

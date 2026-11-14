@@ -37,6 +37,41 @@ def test_http_contract(monkeypatch):
             assert r.status_code==500 and 'secret' not in r.text
     asyncio.run(run())
 
+
+@pytest.mark.parametrize(('message', 'expected_status', 'greeting'), [
+    ('Привет!', 200, 'Привет!'),
+    ('Hello.', 200, 'Hello!'),
+    ('Привет, что изучали в FLEX-1?', 504, None),
+])
+def test_chat_with_unresponsive_model(monkeypatch, message, expected_status, greeting):
+    from contextlib import asynccontextmanager
+
+    from app.ai import service
+    from app.ai.providers import ProviderTimeout
+
+    @asynccontextmanager
+    async def unavailable(*args):
+        raise ProviderTimeout()
+        yield
+
+    monkeypatch.setattr(service, 'configured_providers', unavailable)
+    monkeypatch.setattr(importlib.import_module('app.main'), 'rate_windows', {})
+
+    async def run():
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url='http://test') as client:
+            response = await client.post('/api/v1/assistant/chat', json={'message': message})
+            assert response.status_code == expected_status
+            result = response.json()
+            if greeting:
+                assert result['status'] == 'answered'
+                assert result['answer'].startswith(greeting)
+                assert result['citations'] == []
+            else:
+                assert result['error']['code'] == 'AI_TIMEOUT'
+
+    asyncio.run(run())
+
+
 @pytest.mark.parametrize('payload',[
     {'message':'a','history':[{'role':'system','content':'a'}]},
     {'message':'a','history':[{'role':'user','content':'x'*2000}]*7},
