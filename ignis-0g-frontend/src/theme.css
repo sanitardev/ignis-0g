@@ -1,0 +1,52 @@
+@import "@fontsource-variable/inter";
+
+:root {
+  color-scheme: light;
+  --site-font: "Inter Variable", Inter, ui-sans-serif, system-ui, sans-serif;
+  --site-ink: #0f172a;
+  --site-muted: #64748b;
+  --site-surface: #f5f7fa;
+  --site-line: #e2e8f0;
+  --site-pink: #ea580c;
+  --site-action: #ea580c;
+  --background: var(--site-surface);
+  --surface-navigation: #ffffff;
+  --card: #ffffff;
+  --accent: #f1f5f9;
+  --border: var(--site-line);
+  --input: #cbd5e1;
+  --foreground: var(--site-ink);
+  --muted-foreground: var(--site-muted);
+  --brand: #ea580c;
+  --interactive: var(--brand);
+  --accent-hover: #c2410c;
+  --accent-soft: #fff7ed;
+  --accent-ink: #ffffff;
+  --heading: var(--site-ink);
+  --color-success: #16a34a;
+  --color-warning: #b45309;
+  --color-error: #dc2626;
+  --link: #ea580c;
+  --ring: #ea580c;
+  --primary: #ea580c;
+  --primary-foreground: #ffffff;
+  --accent-foreground: var(--foreground);
+  --control-radius: 10px;
+  --panel-radius: 16px;
+  --radius: 10px;
+  --space-2: 8px;
+  --space-4: 16px;
+  --rail-width: 248px;
+  --inspector-width: 360px;
+  --workspace-gutter: clamp(16px, 2.2vw, 28px);
+  --section-width: 860px;
+  --duration: 150ms;
+  --drawer-shadow: 8px 0 26px #0f172a24;
+  --technical-font: "IBM Plex Mono", monospace;
+}
+
+body {
+  font-family: var(--site-font);
+  font-size: 14px;
+}
+button, a, select { transition: background-color var(--duration), color var(--duration), border-color var(--duration); }

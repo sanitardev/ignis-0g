@@ -1,0 +1,13 @@
+name: ignis-0g-ui
+
+services:
+  frontend:
+    build:
+      context: ./ignis-0g-frontend
+      args:
+        VITE_USE_MOCKS: "false"
+        VITE_API_BASE_URL: /api/v1
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./nasa-combustion-media-collection:/usr/share/nginx/html/nasa-content:ro

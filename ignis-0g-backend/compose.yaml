@@ -1,0 +1,64 @@
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ignis
+      POSTGRES_USER: ignis
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ignis_local}
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ignis -d ignis"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  migrate:
+    build: .
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://ignis:${POSTGRES_PASSWORD:-ignis_local}@db:5432/ignis
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build: .
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://ignis:${POSTGRES_PASSWORD:-ignis_local}@db:5432/ignis
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://llm.alem.ai/v1}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-qwen3-8}
+      EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL:-}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-1024}
+      EMBEDDING_SEND_DIMENSIONS: ${EMBEDDING_SEND_DIMENSIONS:-false}
+      RERANKER_BASE_URL: ${RERANKER_BASE_URL:-}
+      RERANKER_API_KEY: ${RERANKER_API_KEY:-}
+      RERANKER_MODEL: ${RERANKER_MODEL:-}
+      RAG_CHUNK_TOKENS: ${RAG_CHUNK_TOKENS:-400}
+      RAG_CHUNK_OVERLAP: ${RAG_CHUNK_OVERLAP:-50}
+      RAG_CANDIDATE_LIMIT: ${RAG_CANDIDATE_LIMIT:-20}
+      RAG_CONTEXT_LIMIT: ${RAG_CONTEXT_LIMIT:-5}
+      RAG_BATCH_SIZE: ${RAG_BATCH_SIZE:-32}
+      RAG_TIMEOUT: ${RAG_TIMEOUT:-4}
+      RAG_MAX_OUTPUT_TOKENS: ${RAG_MAX_OUTPUT_TOKENS:-3200}
+      RAG_RETRIES: ${RAG_RETRIES:-1}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+volumes:
+  postgres_data:

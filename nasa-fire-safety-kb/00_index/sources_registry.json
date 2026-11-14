@@ -1,0 +1,178 @@
+[
+  {
+    "source_id": "NASA/TP-2015-216046 | PSI FLEX",
+    "program": "FLEX",
+    "sub_experiment": "FLEX-1",
+    "publications": "NASA/TP-2015-216046; PSI: FLEX; Nayagam, Dietrich, Ferkul, Hicks & Williams (2012), Combustion and Flame 159(12), 3583-3588",
+    "psi_portal": "https://psi.nasa.gov/",
+    "ntrs_portal": "https://ntrs.nasa.gov/"
+  },
+  {
+    "source_id": "NASA PSI (FLEX-2 / CFI)",
+    "program": "FLEX",
+    "sub_experiment": "FLEX-2 / CFI",
+    "publications": "NASA PSI: FLEX-2 / CFI; NASA Task Book / ISS Research Explorer: Flame Extinguishment Experiment-2 (FLEX-2)",
+    "psi_portal": "https://psi.nasa.gov/",
+    "ntrs_portal": "https://ntrs.nasa.gov/"
+  },
+  {
+    "source_id": "NASA/TM-20210011385 | PSI BASS-II",
+    "program": "BASS",
+    "sub_experiment": "BASS / BASS-II / BASS-M",
+    "publications": "NASA/TM-20210011385; PSI: BASS / BASS-II; NASA-STD-6001 Test 1 (Upward Flame Propagation)",
+    "psi_portal": "https://psi.nasa.gov/",
+    "ntrs_portal": "https://ntrs.nasa.gov/"
+  },
+  {
+    "source_id": "NASA PSI (ACME BRE)",
+    "program": "ACME",
+    "sub_experiment": "ACME BRE",
+    "publications": "NASA PSI: ACME BRE; NASA Task Book / ISS Research Explorer: Burning Rate Emulator (BRE)",
+    "psi_portal": "https://psi.nasa.gov/",
+    "ntrs_portal": "https://ntrs.nasa.gov/"
+  },
+  {
+    "source_id": "NASA PSI (ACME s-Flames)",
+    "program": "ACME",
+    "sub_experiment": "ACME s-Flame",
+    "publications": "NASA PSI: ACME s-Flames; NASA Task Book / ISS Research Explorer: Structure and Response of Spherical Diffusion Flames (s-Flame)",
+    "psi_portal": "https://psi.nasa.gov/",
+    "ntrs_portal": "https://ntrs.nasa.gov/"
+  },
+  {
+    "source_id": "NASA PSI (ACME E-FIELD)",
+    "program": "ACME",
+    "sub_experiment": "ACME E-FIELD Flames",
+    "publications": "NASA PSI: ACME E-FIELD Flames; NASA Task Book / ISS Research Explorer: Electric-Field Effects on Laminar Diffusion Flames",
+    "psi_portal": "https://psi.nasa.gov/",
+    "ntrs_portal": "https://ntrs.nasa.gov/"
+  },
+  {
+    "source_id": "NASA PSI (CFI / CFI-G)",
+    "program": "ACME",
+    "sub_experiment": "ACME CFI-G",
+    "publications": "NASA PSI: ACME CFI-G; ISS Research Explorer: Cool Flames Investigation with Gases (CFI-G)",
+    "psi_portal": "https://psi.nasa.gov/",
+    "ntrs_portal": "https://ntrs.nasa.gov/"
+  },
+  {
+    "source_id": "NASA PSI (SAFFIRE I)",
+    "program": "Saffire",
+    "sub_experiment": "Saffire I-III",
+    "publications": "NASA PSI: Saffire I-III",
+    "psi_portal": "https://psi.nasa.gov/",
+    "ntrs_portal": "https://ntrs.nasa.gov/"
+  },
+  {
+    "source_id": "NTRS 20210011521",
+    "program": "Saffire",
+    "sub_experiment": "Saffire IV-V",
+    "publications": "NTRS 20210011521; NASA PSI: Saffire IV-V",
+    "psi_portal": "https://psi.nasa.gov/",
+    "ntrs_portal": "https://ntrs.nasa.gov/"
+  },
+  {
+    "source_id": "NASA PSI (SAME) | DOI 10.1016/j.firesaf.2018.04.004",
+    "program": "SAME",
+    "sub_experiment": "SAME / SAME-R",
+    "publications": "NASA PSI: SAME; DOI 10.1016/j.firesaf.2018.04.004",
+    "psi_portal": "https://psi.nasa.gov/",
+    "ntrs_portal": "https://ntrs.nasa.gov/"
+  },
+  {
+    "source_id": "NASA ISS Research Explorer / Daily Summary",
+    "program": "SoFIE",
+    "sub_experiment": "SoFIE-GEL",
+    "publications": "NASA ISS Research Explorer: SoFIE-GEL",
+    "psi_portal": "https://psi.nasa.gov/",
+    "ntrs_portal": "https://ntrs.nasa.gov/"
+  },
+  {
+    "source_id": "NASA Task Book (SoFIE/MIST) | ICES-2023-133",
+    "program": "SoFIE",
+    "sub_experiment": "SoFIE-MIST",
+    "publications": "NASA Task Book: SoFIE-MIST; ICES-2023-133",
+    "psi_portal": "https://psi.nasa.gov/",
+    "ntrs_portal": "https://ntrs.nasa.gov/"
+  },
+  {
+    "source_id": "NASA-STD-6001",
+    "program": "Reference",
+    "sub_experiment": "Earth Baseline (NASA-STD-6001 Test 1)",
+    "publications": "NASA-STD-6001 Test 1",
+    "psi_portal": "https://psi.nasa.gov/",
+    "ntrs_portal": "https://ntrs.nasa.gov/"
+  },
+  {
+    "source_id": "NASA Reference",
+    "program": "Reference",
+    "sub_experiment": "ISS Cabin Atmosphere",
+    "publications": "NASA ISS Environmental Control Reference",
+    "psi_portal": "https://psi.nasa.gov/",
+    "ntrs_portal": "https://ntrs.nasa.gov/"
+  },
+  {
+    "source_id": "NASA EAWG Exploration Atmospheres",
+    "program": "Reference",
+    "sub_experiment": "Exploration Atmosphere (SEA - Lunar/Mars)",
+    "publications": "NASA Exploration Atmospheres Working Group (EAWG) Report",
+    "psi_portal": "https://psi.nasa.gov/",
+    "ntrs_portal": "https://ntrs.nasa.gov/"
+  },
+  {
+    "source_id": "NASA PSI (ACME Flame Design)",
+    "program": "ACME",
+    "sub_experiment": "ACME Flame Design",
+    "publications": "NASA PSI: ACME Flame Design; NASA Task Book / ISS Research Explorer: Flame Design",
+    "psi_portal": "https://psi.nasa.gov/",
+    "ntrs_portal": "https://ntrs.nasa.gov/"
+  },
+  {
+    "source_id": "NASA PSI (ACME CLD Flame)",
+    "program": "ACME",
+    "sub_experiment": "ACME CLD Flame",
+    "publications": "NASA PSI: ACME CLD Flame; NASA Task Book / ISS Research Explorer: Coflow Laminar Diffusion Flame (CLD Flame)",
+    "psi_portal": "https://psi.nasa.gov/",
+    "ntrs_portal": "https://ntrs.nasa.gov/"
+  },
+  {
+    "source_id": "NASA PSI (FLEX-2J) | JAXA",
+    "program": "FLEX",
+    "sub_experiment": "FLEX-2J (JAXA)",
+    "publications": "NASA PSI: FLEX-2J; JAXA Group Combustion / Droplet Array Experiment",
+    "psi_portal": "https://psi.nasa.gov/",
+    "ntrs_portal": "https://ntrs.nasa.gov/"
+  },
+  {
+    "source_id": "NASA PSI (ACME)",
+    "program": "ACME",
+    "sub_experiment": "ACME Program Overview (6 Experiments)",
+    "publications": "NASA PSI: ACME; ISS Research Explorer: Advanced Combustion via Microgravity Experiments (ACME)",
+    "psi_portal": "https://psi.nasa.gov/",
+    "ntrs_portal": "https://ntrs.nasa.gov/"
+  },
+  {
+    "source_id": "NASA PSI (FLEX-ICE-GA) | ASI / CNR-IM",
+    "program": "FLEX",
+    "sub_experiment": "FLEX-ICE-GA",
+    "publications": "NASA PSI: FLEX-ICE-GA; NASA Technical Fact Sheet: Flame Extinguishment Experiment (FLEX) / Italian Combustion Experiment for Green Air",
+    "psi_portal": "https://psi.nasa.gov/",
+    "ntrs_portal": "https://ntrs.nasa.gov/"
+  },
+  {
+    "source_id": "NASA PSI (BASS-M) | CASIS / Milliken",
+    "program": "BASS",
+    "sub_experiment": "BASS-M (Milliken)",
+    "publications": "NASA PSI: BASS-M; ISS Research Explorer: Burning and Suppression of Solids - Milliken (BASS-M)",
+    "psi_portal": "https://psi.nasa.gov/",
+    "ntrs_portal": "https://ntrs.nasa.gov/"
+  },
+  {
+    "source_id": "NASA PSI (SLICE) | NASA/TP",
+    "program": "ACME",
+    "sub_experiment": "SLICE (ACME CLD Precursor)",
+    "publications": "NASA PSI: SLICE; ISS Research Explorer: Structure & Liftoff In Combustion Experiment (SLICE)",
+    "psi_portal": "https://psi.nasa.gov/",
+    "ntrs_portal": "https://ntrs.nasa.gov/"
+  }
+]

@@ -1,0 +1,850 @@
+[
+  {
+    "id": 1,
+    "program": "FLEX",
+    "sub_experiment": "FLEX-1",
+    "safety_pillar": "Suppression",
+    "iss_facility": "CIR / MDCA",
+    "fuel": {
+      "material": "n-heptane, methanol",
+      "state": "liquid",
+      "sample_size_mm": "1.5-4.2"
+    },
+    "conditions": {
+      "flow_regime": "quiescent",
+      "pressure_kpa": [
+        50.7,
+        304.0
+      ],
+      "o2_pct": [
+        12.0,
+        34.0
+      ],
+      "flow_cms": [
+        0.0,
+        0.0
+      ],
+      "diluents": [
+        "N2",
+        "CO2",
+        "He",
+        "Xe"
+      ],
+      "loi_pct": "14.0-15.0"
+    },
+    "key_phenomenon_and_finding": "Discovery of quasi-steady invisible cool flames (~700 K, ~500-800 K range) sustained by low-temperature oxidation chemistry (NTC regime) after radiative extinction of the hot flame; lower LOI than 1g",
+    "safety_implication": "Visual hot-flame extinction does not guarantee fire safety; toxic CO and formaldehyde (CH2O) persist; requires higher inert suppressant concentrations",
+    "hardware_and_rack_details": "ISS Destiny Lab CIR (Combustion Integrated Rack) with MDCA (Multi-user Droplet Combustion Apparatus) chamber insert for isolated free-floating or tethered droplets",
+    "principal_investigators": "Forman A. Williams (PI, UC San Diego); Co-Is: Frederick L. Dryer (Princeton), Daniel L. Dietrich (NASA GRC), Vedha Nayagam (CWRU/NASA GRC)",
+    "scientific_link_and_applications": "Baseline microgravity droplet data isolating NTC/cool-flame kinetics from buoyancy; directly validates chemical mechanisms for high-efficiency low-soot IC engines (HCCI, RCCI, LTC) and inspired ACME radiative extinction and gaseous cool-flame studies",
+    "source_id": "NASA/TP-2015-216046 | PSI FLEX",
+    "official_identifiers_and_publications": "NASA/TP-2015-216046; PSI: FLEX; Nayagam, Dietrich, Ferkul, Hicks & Williams (2012), Combustion and Flame 159(12), 3583-3588"
+  },
+  {
+    "id": 2,
+    "program": "FLEX",
+    "sub_experiment": "FLEX-2 / CFI",
+    "safety_pillar": "Suppression",
+    "iss_facility": "CIR / MDCA",
+    "fuel": {
+      "material": "n-octane, n-decane, heptane/iso-octane, decane/hexanol",
+      "state": "liquid",
+      "sample_size_mm": "1.5-4.2"
+    },
+    "conditions": {
+      "flow_regime": "quiescent",
+      "pressure_kpa": [
+        50.7,
+        304.0
+      ],
+      "o2_pct": [
+        10.0,
+        50.0
+      ],
+      "flow_cms": [
+        0.0,
+        0.0
+      ],
+      "diluents": [
+        "N2",
+        "CO2",
+        "He",
+        "Xe"
+      ],
+      "loi_pct": null
+    },
+    "key_phenomenon_and_finding": "Extended FLEX to heavier alkanes, multi-component mixtures, and twin droplets; discovered two-stage combustion, cool-flame reignition back to hot flame, and oscillating warm flames at high pressure",
+    "safety_implication": "Risk of delayed hot-flame reignition from a persistent cool flame if compartment pressure rises or fresh O2 enters",
+    "hardware_and_rack_details": "ISS CIR / MDCA upgraded with multi-component fuel dispensing, twin-droplet deployment, and higher-pressure/higher-O2 testing (including Cool Flames Investigation - CFI)",
+    "principal_investigators": "Forman A. Williams (PI, UC San Diego); Co-Is: Frederick L. Dryer, Daniel L. Dietrich, Vedha Nayagam, Paul V. Ferkul",
+    "scientific_link_and_applications": "Bridges single-component alkane kinetics to real multi-component transportation/aviation fuels and LTC/HCCI autoignition dynamics; directly motivated ACME CFI-G for gaseous cool flames",
+    "source_id": "NASA PSI (FLEX-2 / CFI)",
+    "official_identifiers_and_publications": "NASA PSI: FLEX-2 / CFI; NASA Task Book / ISS Research Explorer: Flame Extinguishment Experiment-2 (FLEX-2)"
+  },
+  {
+    "id": 3,
+    "program": "BASS",
+    "sub_experiment": "BASS / BASS-II / BASS-M",
+    "safety_pillar": "Prevention",
+    "iss_facility": "MSG / SPICE",
+    "fuel": {
+      "material": "SIBAL (75% cotton/25% fiberglass), PMMA, Nomex, Ultem, FR cotton",
+      "state": "solid",
+      "sample_size_mm": "0.125-12.7"
+    },
+    "conditions": {
+      "flow_regime": "coflow; opposed",
+      "pressure_kpa": [
+        101.0,
+        101.3
+      ],
+      "o2_pct": [
+        13.6,
+        21.0
+      ],
+      "flow_cms": [
+        0.0,
+        53.0
+      ],
+      "diluents": [
+        "N2"
+      ],
+      "loi_pct": "13.6"
+    },
+    "key_phenomenon_and_finding": "U-shaped flammability boundary in 0g: absence of 1g buoyant convection (~20-30 cm/s) reduces convective cooling/blow-off at low forced flows (1-10 cm/s), creating thicker boundary layers until radiative quenching below 1-2 cm/s; SIBAL burned at 13.6% O2 (-2.4% safety margin vs 1g)",
+    "safety_implication": "Earth upward flame-spread certification NASA-STD-6001 Test 1 is not always conservative in low-flow spacecraft HVAC regimes; restarting airflow causes rapid flare-up",
+    "hardware_and_rack_details": "MSG (Microgravity Science Glovebox) housing modified SPICE (Smoke Point In Coflow Experiment) small wind-tunnel duct with solid sample holders",
+    "principal_investigators": "Sandra L. Olson (PI, NASA GRC); Fletcher J. Miller (PI, San Diego State Univ.)",
+    "scientific_link_and_applications": "Demonstrates that radiative vs convective heat-loss balance in 0g governs solid flammability; complements ACME BRE (gaseous emulation of solid burning rates) and SoFIE (subatmospheric Exploration Atmospheres)",
+    "source_id": "NASA/TM-20210011385 | PSI BASS-II",
+    "official_identifiers_and_publications": "NASA/TM-20210011385; PSI: BASS / BASS-II; NASA-STD-6001 Test 1 (Upward Flame Propagation)"
+  },
+  {
+    "id": 4,
+    "program": "ACME",
+    "sub_experiment": "ACME BRE",
+    "safety_pillar": "Prevention",
+    "iss_facility": "CIR (Porous Burner)",
+    "fuel": {
+      "material": "ethylene, methane (emulating paper, plastic, alcohol)",
+      "state": "gas",
+      "sample_size_mm": "25-50"
+    },
+    "conditions": {
+      "flow_regime": "quiescent",
+      "pressure_kpa": [
+        50.7,
+        101.3
+      ],
+      "o2_pct": [
+        21.0,
+        34.0
+      ],
+      "flow_cms": [
+        0.0,
+        0.0
+      ],
+      "diluents": [
+        "N2"
+      ],
+      "loi_pct": null
+    },
+    "key_phenomenon_and_finding": "Flat porous burner emulates solid/liquid material heat of gasification and burning rates via controlled gaseous fuel flow; sustained burning for minutes with zero airflow in elevated-O2 atmospheres; 1g burn rate 3-4x higher than 0g",
+    "safety_implication": "Shutting down cabin ventilation alone may not immediately extinguish fire in elevated-O2 Exploration Atmospheres; enables rapid non-destructive material flammability screening",
+    "hardware_and_rack_details": "ISS CIR using ACME Chamber Insert Assembly (CIA) replacing FLEX MDCA while reusing CIR chamber, optics, gas supply, and avionics; 25-50 mm flat porous stainless-steel burner",
+    "principal_investigators": "James G. Quintiere (PI, Univ. of Maryland); Co-I: Peter B. Sunderland (Univ. of Maryland)",
+    "scientific_link_and_applications": "Connects gaseous burner physics to solid-fuel flammability from BASS and SoFIE; enables rapid screening of materials in 0g without consuming solid coupons",
+    "source_id": "NASA PSI (ACME BRE)",
+    "official_identifiers_and_publications": "NASA PSI: ACME BRE; NASA Task Book / ISS Research Explorer: Burning Rate Emulator (BRE)"
+  },
+  {
+    "id": 5,
+    "program": "ACME",
+    "sub_experiment": "ACME s-Flame",
+    "safety_pillar": "Prevention",
+    "iss_facility": "CIR (Spherical Burner)",
+    "fuel": {
+      "material": "H2, CH4, C2H4",
+      "state": "gas",
+      "sample_size_mm": "6.35-12.7"
+    },
+    "conditions": {
+      "flow_regime": "spherical_flow",
+      "pressure_kpa": [
+        50.7,
+        101.3
+      ],
+      "o2_pct": [
+        15.0,
+        35.0
+      ],
+      "flow_cms": [
+        0.0,
+        0.0
+      ],
+      "diluents": [
+        "N2",
+        "He",
+        "CO2"
+      ],
+      "loi_pct": null
+    },
+    "key_phenomenon_and_finding": "First quasi-steady spherical gaseous diffusion flames; detailed measurement of flame structure, radiative extinction of large flames, and Lewis-number pulsating instabilities (especially in H2)",
+    "safety_implication": "Provides clean 1D spherical benchmark data to validate 3D CFD fire kinetics, radiation loss, and extinction models for spacecraft fires",
+    "hardware_and_rack_details": "ISS CIR with ACME CIA housing a small porous spherical burner, radiometers, and cameras (hardware shared with Flame Design and CFI-G)",
+    "principal_investigators": "Chung K. Law (PI, Princeton Univ.)",
+    "scientific_link_and_applications": "Directly extends FLEX droplet radiative extinction discoveries from liquid sprays to pure 1D gaseous diffusion flames",
+    "source_id": "NASA PSI (ACME s-Flames)",
+    "official_identifiers_and_publications": "NASA PSI: ACME s-Flames; NASA Task Book / ISS Research Explorer: Structure and Response of Spherical Diffusion Flames (s-Flame)"
+  },
+  {
+    "id": 6,
+    "program": "ACME",
+    "sub_experiment": "ACME E-FIELD Flames",
+    "safety_pillar": "Suppression",
+    "iss_facility": "CIR (High-Voltage Mesh)",
+    "fuel": {
+      "material": "CH4, C2H4",
+      "state": "gas",
+      "sample_size_mm": "2.1 (jet) / 25 (coflow)"
+    },
+    "conditions": {
+      "flow_regime": "coflow_jet",
+      "pressure_kpa": [
+        101.0,
+        101.3
+      ],
+      "o2_pct": [
+        21.0,
+        21.0
+      ],
+      "flow_cms": [
+        10.0,
+        40.0
+      ],
+      "diluents": [
+        "N2"
+      ],
+      "loi_pct": null
+    },
+    "key_phenomenon_and_finding": "Electric field up to 10 kV drives chemi-ions and charged soot particles to create an ionic wind (electrohydrodynamic force) that reshapes the flame, shifts heat flux, enhances oxidizer mixing, and strongly suppresses soot formation",
+    "safety_implication": "Potential active, non-chemical flame control, stabilization, and soot-reduction technology for future spacecraft and terrestrial combustors",
+    "hardware_and_rack_details": "ISS CIR with ACME CIA equipped with coflow jet burner and high-voltage upper mesh electrode (up to 10 kV)",
+    "principal_investigators": "Derek Dunn-Rankin (PI, UC Irvine)",
+    "scientific_link_and_applications": "Exploits absence of buoyancy in 0g so weak ionic wind dominates flame aerodynamics and soot precursor residence time",
+    "source_id": "NASA PSI (ACME E-FIELD)",
+    "official_identifiers_and_publications": "NASA PSI: ACME E-FIELD Flames; NASA Task Book / ISS Research Explorer: Electric-Field Effects on Laminar Diffusion Flames"
+  },
+  {
+    "id": 7,
+    "program": "ACME",
+    "sub_experiment": "ACME CFI-G",
+    "safety_pillar": "Prevention",
+    "iss_facility": "CIR (Spherical Burner)",
+    "fuel": {
+      "material": "propane, n-butane, n-pentane (inverse flame)",
+      "state": "gas",
+      "sample_size_mm": "6.35-12.7"
+    },
+    "conditions": {
+      "flow_regime": "spherical_flow",
+      "pressure_kpa": [
+        50.7,
+        101.3
+      ],
+      "o2_pct": [
+        21.0,
+        85.0
+      ],
+      "flow_cms": [
+        0.0,
+        0.0
+      ],
+      "diluents": [
+        "N2"
+      ],
+      "loi_pct": null
+    },
+    "key_phenomenon_and_finding": "Achieved steady non-premixed gaseous cool flames without ozone, plasma, or external preheating using spherical burner configurations",
+    "safety_implication": "Confirms low-temperature oxidation / cool-flame fire risks exist in gaseous fuel leaks as well as liquid droplet sprays",
+    "hardware_and_rack_details": "ISS CIR with ACME CIA spherical porous burner operated in high-O2 / inverse diffusion flame mode",
+    "principal_investigators": "ACME / NASA GRC CFI-G team (extended from FLEX CFI)",
+    "scientific_link_and_applications": "Directly links FLEX/FLEX-2 liquid droplet cool-flame discoveries to pure gaseous non-premixed flames in ACME",
+    "source_id": "NASA PSI (CFI / CFI-G)",
+    "official_identifiers_and_publications": "NASA PSI: ACME CFI-G; ISS Research Explorer: Cool Flames Investigation with Gases (CFI-G)"
+  },
+  {
+    "id": 8,
+    "program": "Saffire",
+    "sub_experiment": "Saffire I-III",
+    "safety_pillar": "Prevention / Detection",
+    "iss_facility": "Cygnus Cargo Vehicle",
+    "fuel": {
+      "material": "SIBAL (40x100 cm), Nomex, acrylic/Plexiglas",
+      "state": "solid",
+      "sample_size_mm": "400x1000"
+    },
+    "conditions": {
+      "flow_regime": "forced_duct",
+      "pressure_kpa": [
+        101.0,
+        101.3
+      ],
+      "o2_pct": [
+        21.0,
+        21.0
+      ],
+      "flow_cms": [
+        null,
+        null
+      ],
+      "diluents": [
+        "N2"
+      ],
+      "loi_pct": null
+    },
+    "key_phenomenon_and_finding": "Full-scale flame spreads slower in large confined volumes than in small lab ducts, delaying smoke generation",
+    "safety_implication": "Delayed smoke detector activation in large spacecraft habitats; validates scaling from ISS glovebox tests (BASS)",
+    "hardware_and_rack_details": "Cygnus spacecraft large flow duct after ISS undocking",
+    "principal_investigators": "David L. Urban / Gary A. Ruff (NASA GRC)",
+    "scientific_link_and_applications": "Scales up BASS/BASS-II small-duct solid flammability findings to realistic spacecraft habitat dimensions",
+    "source_id": "NASA PSI (SAFFIRE I)",
+    "official_identifiers_and_publications": "NASA PSI: Saffire I-III"
+  },
+  {
+    "id": 9,
+    "program": "Saffire",
+    "sub_experiment": "Saffire IV-V",
+    "safety_pillar": "Detection / Suppression",
+    "iss_facility": "Cygnus Cargo Vehicle",
+    "fuel": {
+      "material": "PMMA (40x18 cm), cotton & SIBAL (40x50 cm)",
+      "state": "solid",
+      "sample_size_mm": "400x180-500"
+    },
+    "conditions": {
+      "flow_regime": "forced_duct",
+      "pressure_kpa": [
+        101.0,
+        101.3
+      ],
+      "o2_pct": [
+        21.0,
+        21.0
+      ],
+      "flow_cms": [
+        null,
+        null
+      ],
+      "diluents": [
+        "N2"
+      ],
+      "loi_pct": null
+    },
+    "key_phenomenon_and_finding": "Heat release up to 10 kW did not cause catastrophic cabin overpressure/temp, but released CO, CO2, HF, HCl",
+    "safety_implication": "Primary threat in large cabins is toxic/acid gas transport; validated prototype smoke eater & CO2 scrubber cleanup",
+    "hardware_and_rack_details": "Cygnus spacecraft equipped with fire-cleanup/scrubber diagnostics and gas sensors",
+    "principal_investigators": "David L. Urban / Gary A. Ruff (NASA GRC)",
+    "scientific_link_and_applications": "Integrates fire growth scaling with post-fire toxic gas remediation",
+    "source_id": "NTRS 20210011521",
+    "official_identifiers_and_publications": "NTRS 20210011521; NASA PSI: Saffire IV-V"
+  },
+  {
+    "id": 10,
+    "program": "SAME",
+    "sub_experiment": "SAME / SAME-R",
+    "safety_pillar": "Detection",
+    "iss_facility": "MSG",
+    "fuel": {
+      "material": "Teflon, Kapton, Pyrell foam, cellulose, silicone rubber, DBP",
+      "state": "aerosol_pyrolysis",
+      "sample_size_mm": null
+    },
+    "conditions": {
+      "flow_regime": "forced_duct",
+      "pressure_kpa": [
+        101.0,
+        101.3
+      ],
+      "o2_pct": [
+        21.0,
+        21.0
+      ],
+      "flow_cms": [
+        0.0,
+        8.1
+      ],
+      "diluents": [
+        "N2"
+      ],
+      "loi_pct": null
+    },
+    "key_phenomenon_and_finding": "Microgravity smoke particle size distribution differs from 1g (aging 10-1800 s); compared Shuttle ionization vs ISS photoelectric sensors",
+    "safety_implication": "Single-moment smoke sensors struggle with tiny Teflon/Kapton particles vs dust; drives multi-wavelength/multi-moment detectors",
+    "hardware_and_rack_details": "MSG (Microgravity Science Glovebox) aerosol measurement duct",
+    "principal_investigators": "David L. Urban / Marit E. Meyer (NASA GRC)",
+    "scientific_link_and_applications": "Complements BASS/Saffire by characterizing microgravity smoke particle morphology for spacecraft fire detection",
+    "source_id": "NASA PSI (SAME) | DOI 10.1016/j.firesaf.2018.04.004",
+    "official_identifiers_and_publications": "NASA PSI: SAME; DOI 10.1016/j.firesaf.2018.04.004"
+  },
+  {
+    "id": 11,
+    "program": "SoFIE",
+    "sub_experiment": "SoFIE-GEL",
+    "safety_pillar": "Prevention",
+    "iss_facility": "CIR / SoFIE",
+    "fuel": {
+      "material": "PMMA spheres (internally heated)",
+      "state": "solid",
+      "sample_size_mm": null
+    },
+    "conditions": {
+      "flow_regime": "low_flow",
+      "pressure_kpa": [
+        40.0,
+        100.0
+      ],
+      "o2_pct": [
+        null,
+        null
+      ],
+      "flow_cms": [
+        null,
+        null
+      ],
+      "diluents": [
+        "N2"
+      ],
+      "loi_pct": null
+    },
+    "key_phenomenon_and_finding": "Measures how internal solid fuel heating/temperature shifts flame growth and extinction limits in microgravity",
+    "safety_implication": "Defines critical thermal thickness and preheating risk near hot spacecraft electronics/heaters",
+    "hardware_and_rack_details": "ISS CIR equipped with SoFIE (Solid Fuel Ignition and Extinction) insert replacing ACME CIA",
+    "principal_investigators": "Paul V. Ferkul / NASA GRC SoFIE team",
+    "scientific_link_and_applications": "Follow-on to BASS and ACME inside CIR, moving from gaseous emulation (ACME BRE) back to thick solid fuels under variable pressure/O2",
+    "source_id": "NASA ISS Research Explorer / Daily Summary",
+    "official_identifiers_and_publications": "NASA ISS Research Explorer: SoFIE-GEL"
+  },
+  {
+    "id": 12,
+    "program": "SoFIE",
+    "sub_experiment": "SoFIE-MIST",
+    "safety_pillar": "Prevention",
+    "iss_facility": "CIR / SoFIE",
+    "fuel": {
+      "material": "black cast PMMA rods (+ 0-3.3 kW/m2 radiant flux)",
+      "state": "solid",
+      "sample_size_mm": "6.4-12.7"
+    },
+    "conditions": {
+      "flow_regime": "opposed_flow",
+      "pressure_kpa": [
+        40.0,
+        100.0
+      ],
+      "o2_pct": [
+        null,
+        null
+      ],
+      "flow_cms": [
+        10.0,
+        10.0
+      ],
+      "diluents": [
+        "N2"
+      ],
+      "loi_pct": "lower_than_1g"
+    },
+    "key_phenomenon_and_finding": "Blue bubble flames and two extinction limits (spread LOC-FS & regression LOC-FR); significantly lower LOC in 0g than 1g",
+    "safety_implication": "Proves Earth flammability screening is non-conservative for subatmospheric Exploration Atmospheres",
+    "hardware_and_rack_details": "ISS CIR / SoFIE cylindrical flow tunnel with external radiant heaters",
+    "principal_investigators": "Fletcher J. Miller / NASA GRC SoFIE team",
+    "scientific_link_and_applications": "Directly extends BASS low-flow 0g solid flammability findings to subatmospheric Exploration Atmospheres (56.5 kPa / 34% O2)",
+    "source_id": "NASA Task Book (SoFIE/MIST) | ICES-2023-133",
+    "official_identifiers_and_publications": "NASA Task Book: SoFIE-MIST; ICES-2023-133"
+  },
+  {
+    "id": 13,
+    "program": "Reference",
+    "sub_experiment": "Earth Baseline (NASA-STD-6001 Test 1)",
+    "safety_pillar": "Reference",
+    "iss_facility": "Ground 1g Lab",
+    "fuel": {
+      "material": "Standard upward flame spread test",
+      "state": "solid",
+      "sample_size_mm": null
+    },
+    "conditions": {
+      "flow_regime": "buoyancy_1g",
+      "pressure_kpa": [
+        101.3,
+        101.3
+      ],
+      "o2_pct": [
+        21.0,
+        21.0
+      ],
+      "flow_cms": [
+        null,
+        null
+      ],
+      "diluents": [
+        "N2"
+      ],
+      "loi_pct": null
+    },
+    "key_phenomenon_and_finding": "Baseline 1g Earth certification standard where upward natural convection (~20-30 cm/s) dominates flame spread",
+    "safety_implication": "Historically assumed to be worst-case, but BASS and SoFIE proved 0g low-flow regimes can ignite at lower O2",
+    "hardware_and_rack_details": "1g vertical combustion test chamber",
+    "principal_investigators": "NASA",
+    "scientific_link_and_applications": "Reference baseline challenged by BASS/BASS-II U-shaped flammability curve and SoFIE-MIST subatmospheric tests",
+    "source_id": "NASA-STD-6001",
+    "official_identifiers_and_publications": "NASA-STD-6001 Test 1"
+  },
+  {
+    "id": 14,
+    "program": "Reference",
+    "sub_experiment": "ISS Cabin Atmosphere",
+    "safety_pillar": "Reference",
+    "iss_facility": "ISS Orbit 0g",
+    "fuel": {
+      "material": "Nominal crewed habitat",
+      "state": null,
+      "sample_size_mm": null
+    },
+    "conditions": {
+      "flow_regime": "hvac_low_flow",
+      "pressure_kpa": [
+        101.0,
+        101.3
+      ],
+      "o2_pct": [
+        21.0,
+        21.0
+      ],
+      "flow_cms": [
+        5.0,
+        20.0
+      ],
+      "diluents": [
+        "N2"
+      ],
+      "loi_pct": null
+    },
+    "key_phenomenon_and_finding": "Sea-level pressure and O2 in microgravity; HVAC airflow creates critical low-velocity regime matching BASS peak flammability",
+    "safety_implication": "Requires strict material limits, ventilation shutoff protocols, and photoelectric smoke detection",
+    "hardware_and_rack_details": "ISS habitable modules (0g, forced HVAC ventilation)",
+    "principal_investigators": "NASA",
+    "scientific_link_and_applications": "Target operating regime evaluated by BASS/BASS-II, SAME, and ACME",
+    "source_id": "NASA Reference",
+    "official_identifiers_and_publications": "NASA ISS Environmental Control Reference"
+  },
+  {
+    "id": 15,
+    "program": "Reference",
+    "sub_experiment": "Exploration Atmosphere (SEA - Lunar/Mars)",
+    "safety_pillar": "Reference",
+    "iss_facility": "Gateway / Lunar Surface / Rover",
+    "fuel": {
+      "material": "Future human habitats (1/6g or 0g)",
+      "state": null,
+      "sample_size_mm": null
+    },
+    "conditions": {
+      "flow_regime": "hvac_low_flow",
+      "pressure_kpa": [
+        56.5,
+        56.5
+      ],
+      "o2_pct": [
+        34.0,
+        34.0
+      ],
+      "flow_cms": [
+        null,
+        null
+      ],
+      "diluents": [
+        "N2"
+      ],
+      "loi_pct": null
+    },
+    "key_phenomenon_and_finding": "Recommended by EAWG (8.2 psia / 34% O2) to minimize EVA prebreathe time while balancing hypoxia and fire risk",
+    "safety_implication": "Significantly increases material flammability; primary target environment for SoFIE and ACME BRE validation",
+    "hardware_and_rack_details": "Future Artemis/Gateway/Lunar surface pressurized habitats",
+    "principal_investigators": "NASA EAWG",
+    "scientific_link_and_applications": "Primary target regime driving ACME BRE and SoFIE testing",
+    "source_id": "NASA EAWG Exploration Atmospheres",
+    "official_identifiers_and_publications": "NASA Exploration Atmospheres Working Group (EAWG) Report"
+  },
+  {
+    "id": 16,
+    "program": "ACME",
+    "sub_experiment": "ACME Flame Design",
+    "safety_pillar": "Prevention / Fundamental",
+    "iss_facility": "CIR (Spherical Burner)",
+    "fuel": {
+      "material": "C2H4, CH4",
+      "state": "gas",
+      "sample_size_mm": "6.35-12.7"
+    },
+    "conditions": {
+      "flow_regime": "spherical_flow",
+      "pressure_kpa": [
+        50.7,
+        101.3
+      ],
+      "o2_pct": [
+        18.0,
+        50.0
+      ],
+      "flow_cms": [
+        0.0,
+        0.0
+      ],
+      "diluents": [
+        "N2",
+        "He"
+      ],
+      "loi_pct": null
+    },
+    "key_phenomenon_and_finding": "Demonstrated soot-free quasi-steady spherical diffusion flames by tailoring stoichiometric mixture fraction (Zst) via fuel-side vs oxidizer-side inert dilution: diluting fuel / enriching oxidizer (high Zst) shifts flame sheet toward fuel side, cooling/thinning the fuel-rich pyrolysis zone to eliminate soot; diluting oxidizer (low Zst) increases soot and radiation loss leading to radiative extinction",
+    "safety_implication": "Enables rational design of soot-free, clean-burning spacecraft and terrestrial combustors and validates radiation/soot-inception models",
+    "hardware_and_rack_details": "ISS CIR with ACME CIA spherical porous burner (normal and inverse injection capability)",
+    "principal_investigators": "Richard L. Axelbaum (PI, Washington Univ. in St. Louis)",
+    "scientific_link_and_applications": "Builds on FLEX radiative extinction physics and pairs with s-Flame to decouple soot formation, radiation loss, and Zst effects without buoyancy",
+    "source_id": "NASA PSI (ACME Flame Design)",
+    "official_identifiers_and_publications": "NASA PSI: ACME Flame Design; NASA Task Book / ISS Research Explorer: Flame Design"
+  },
+  {
+    "id": 17,
+    "program": "ACME",
+    "sub_experiment": "ACME CLD Flame",
+    "safety_pillar": "Fundamental",
+    "iss_facility": "CIR (Coflow Burner)",
+    "fuel": {
+      "material": "CH4, C2H4 (diluted)",
+      "state": "gas",
+      "sample_size_mm": "2.1 (jet) / 25 (coflow)"
+    },
+    "conditions": {
+      "flow_regime": "coflow_jet",
+      "pressure_kpa": [
+        101.0,
+        300.0
+      ],
+      "o2_pct": [
+        21.0,
+        21.0
+      ],
+      "flow_cms": [
+        10.0,
+        40.0
+      ],
+      "diluents": [
+        "N2"
+      ],
+      "loi_pct": null
+    },
+    "key_phenomenon_and_finding": "Provides steady, flicker-free axisymmetric coflow laminar diffusion flames in 0g up to elevated pressures to isolate soot growth and radiative heat transfer from buoyancy",
+    "safety_implication": "Supplies high-fidelity validation benchmarks for 2D/3D CFD soot and radiation models used in spacecraft and terrestrial combustion",
+    "hardware_and_rack_details": "ISS CIR with ACME CIA axisymmetric coflow laminar jet burner and optical soot/temperature diagnostics",
+    "principal_investigators": "Marshall B. Long (PI, Yale Univ.); Co-I: Mitchell D. Smooke (Yale Univ.)",
+    "scientific_link_and_applications": "Part of the 6-experiment ACME suite complementing Flame Design and E-FIELD Flames on soot formation in microgravity",
+    "source_id": "NASA PSI (ACME CLD Flame)",
+    "official_identifiers_and_publications": "NASA PSI: ACME CLD Flame; NASA Task Book / ISS Research Explorer: Coflow Laminar Diffusion Flame (CLD Flame)"
+  },
+  {
+    "id": 18,
+    "program": "FLEX",
+    "sub_experiment": "FLEX-2J (JAXA)",
+    "safety_pillar": "Suppression / Spray",
+    "iss_facility": "CIR / MDCA",
+    "fuel": {
+      "material": "n-decane (droplet arrays)",
+      "state": "liquid",
+      "sample_size_mm": "0.5-2.0"
+    },
+    "conditions": {
+      "flow_regime": "quiescent",
+      "pressure_kpa": [
+        101.0,
+        101.3
+      ],
+      "o2_pct": [
+        14.0,
+        21.0
+      ],
+      "flow_cms": [
+        0.0,
+        0.0
+      ],
+      "diluents": [
+        "N2",
+        "CO2"
+      ],
+      "loi_pct": null
+    },
+    "key_phenomenon_and_finding": "Investigated flame spread along linear and lattice arrays of liquid fuel droplets rather than isolated/twin droplets; revealed group combustion regimes, inter-droplet heat/vapor transfer, and percolation limits for flame spread",
+    "safety_implication": "Models real fuel-spray and mist fire propagation and extinction limits in microgravity spacecraft and spray combustors",
+    "hardware_and_rack_details": "ISS CIR / MDCA hardware adapted for multi-droplet linear/lattice array generation and sequential ignition",
+    "principal_investigators": "Masato Mikami (PI, Yamaguchi Univ., JAXA)",
+    "scientific_link_and_applications": "Extends FLEX-1 (single droplets) and FLEX-2 (multi-component/twin droplets) to multi-droplet array group combustion and spray flame spread",
+    "source_id": "NASA PSI (FLEX-2J) | JAXA",
+    "official_identifiers_and_publications": "NASA PSI: FLEX-2J; JAXA Group Combustion / Droplet Array Experiment"
+  },
+  {
+    "id": 19,
+    "program": "ACME",
+    "sub_experiment": "ACME Program Overview (6 Experiments)",
+    "safety_pillar": "Prevention / Suppression / Fundamental",
+    "iss_facility": "CIR (CIA)",
+    "fuel": {
+      "material": "H2, CH4, C2H4, propane, n-butane, n-pentane",
+      "state": "gas",
+      "sample_size_mm": "0.4-50.0 (burners)"
+    },
+    "conditions": {
+      "flow_regime": "quiescent / spherical / coflow",
+      "pressure_kpa": [
+        50.0,
+        304.0
+      ],
+      "o2_pct": [
+        15.0,
+        85.0
+      ],
+      "flow_cms": [
+        0.0,
+        40.0
+      ],
+      "diluents": [
+        "N2",
+        "He"
+      ],
+      "loi_pct": null
+    },
+    "key_phenomenon_and_finding": "Six-experiment suite (BRE, Flame Design, s-Flame, E-FIELD Flames, CLD Flame, CFI-G) studying: (1) spacecraft fire prevention & solid-material emulation (BRE), (2) soot-free flames & Zst control (Flame Design), (3) radiative extinction & instabilities (s-Flame), (4) active electric-field soot/flame control (E-FIELD), (5) elevated-pressure soot CFD benchmarks (CLD), and (6) gaseous cool flames (CFI-G)",
+    "safety_implication": "Unified gaseous microgravity testbed bridging fundamental combustion physics, soot reduction, CFD validation, and spacecraft fire safety",
+    "hardware_and_rack_details": "ISS Destiny Lab CIR rack using modular ACME Chamber Insert Assembly (CIA) that replaced FLEX MDCA while reusing CIR chamber, optical diagnostics, gas mixing, and avionics",
+    "principal_investigators": "Dennis P. Stocker (NASA GRC Project Scientist); PIs: James G. Quintiere (BRE), Richard L. Axelbaum (Flame Design), Chung K. Law (s-Flame), Derek Dunn-Rankin (E-FIELD Flames), Marshall B. Long (CLD Flame), Forman A. Williams / NASA GRC (CFI-G)",
+    "scientific_link_and_applications": "Direct hardware and scientific successor to FLEX inside CIR (radiative extinction & cool flames -> gas phase) and gas-phase counterpart to BASS solid-fuel flammability studies",
+    "source_id": "NASA PSI (ACME)",
+    "official_identifiers_and_publications": "NASA PSI: ACME; ISS Research Explorer: Advanced Combustion via Microgravity Experiments (ACME)"
+  },
+  {
+    "id": 20,
+    "program": "FLEX",
+    "sub_experiment": "FLEX-ICE-GA",
+    "safety_pillar": "Suppression / Fundamental",
+    "iss_facility": "CIR / MDCA",
+    "fuel": {
+      "material": "50/50 n-heptane/ethanol, 50/50 n-decane/1-hexanol (biofuel & jet-A surrogates)",
+      "state": "liquid",
+      "sample_size_mm": "2.0-5.0"
+    },
+    "conditions": {
+      "flow_regime": "quiescent",
+      "pressure_kpa": [
+        101.0,
+        202.7
+      ],
+      "o2_pct": [
+        15.0,
+        21.0
+      ],
+      "flow_cms": [
+        0.0,
+        0.0
+      ],
+      "diluents": [
+        "N2",
+        "CO2"
+      ],
+      "loi_pct": null
+    },
+    "key_phenomenon_and_finding": "Fourth investigation in the ISS FLEX suite studying isolated single-droplet combustion of renewable alcohol/alkane biofuel surrogates (heptane/ethanol, decane/1-hexanol) in microgravity; quantified preferential vaporization, soot shell dynamics, and radiative/diffusive extinction limits without buoyancy",
+    "safety_implication": "Provides validated surrogate chemical-kinetic and evaporation benchmarks for next-generation low-soot aviation/biofuel blends and spacecraft fluid fire hazards",
+    "hardware_and_rack_details": "ISS Destiny Lab CIR rack with MDCA chamber insert, multi-fuel syringe dispensing needles, and high-speed backlit/flame imaging diagnostics",
+    "principal_investigators": "Patrizio Massoli (PI, CNR-Istituto Motori, Italy); PS: Daniel L. Dietrich (NASA GRC)",
+    "scientific_link_and_applications": "Completes the four-part ISS FLEX droplet campaign (FLEX, FLEX-2/CFI, FLEX-2J, FLEX-ICE-GA), bridging single alkanes to oxygenated biofuel blends",
+    "source_id": "NASA PSI (FLEX-ICE-GA) | ASI / CNR-IM",
+    "official_identifiers_and_publications": "NASA PSI: FLEX-ICE-GA; NASA Technical Fact Sheet: Flame Extinguishment Experiment (FLEX) / Italian Combustion Experiment for Green Air"
+  },
+  {
+    "id": 21,
+    "program": "BASS",
+    "sub_experiment": "BASS-M (Milliken)",
+    "safety_pillar": "Prevention",
+    "iss_facility": "MSG / SPICE",
+    "fuel": {
+      "material": "10 flame-retardant (FR) treated textiles (cotton, cotton/nylon, Nomex blends)",
+      "state": "solid",
+      "sample_size_mm": "0.2-1.0 (fabric)"
+    },
+    "conditions": {
+      "flow_regime": "opposed; concurrent",
+      "pressure_kpa": [
+        101.0,
+        101.3
+      ],
+      "o2_pct": [
+        21.0,
+        21.0
+      ],
+      "flow_cms": [
+        1.0,
+        50.0
+      ],
+      "diluents": [
+        "N2"
+      ],
+      "loi_pct": null
+    },
+    "key_phenomenon_and_finding": "Evaluated self-extinguishment and flame spread of 10 commercial flame-retardant textiles under forced low-speed ventilation in 0g versus 1g upward-burn standards; demonstrated how fabric weave density, char formation, and low convective cooling alter flame persistence in microgravity",
+    "safety_implication": "Directly benchmarks commercial fire-resistant fabrics for crew clothing and habitat interiors where 1g upward-burn screening can mispredict 0g ventilation-driven burning",
+    "hardware_and_rack_details": "ISS Microgravity Science Glovebox (MSG) using the SPICE fan-driven small wind-tunnel flow duct and fabric sample frames",
+    "principal_investigators": "Milliken & Company Research Team; NASA GRC BASS/MSG Team (Sandra L. Olson, Paul V. Ferkul)",
+    "scientific_link_and_applications": "Commercial/applied extension of BASS and BASS-II translating fundamental microgravity solid flammability limits into textile fire-safety engineering",
+    "source_id": "NASA PSI (BASS-M) | CASIS / Milliken",
+    "official_identifiers_and_publications": "NASA PSI: BASS-M; ISS Research Explorer: Burning and Suppression of Solids - Milliken (BASS-M)"
+  },
+  {
+    "id": 22,
+    "program": "ACME",
+    "sub_experiment": "SLICE (ACME CLD Precursor)",
+    "safety_pillar": "Prevention / Fundamental",
+    "iss_facility": "MSG / SPICE",
+    "fuel": {
+      "material": "CH4, C2H4 (diluted with N2)",
+      "state": "gas",
+      "sample_size_mm": "1.0-3.2 (nozzle)"
+    },
+    "conditions": {
+      "flow_regime": "coflow_jet",
+      "pressure_kpa": [
+        101.0,
+        101.3
+      ],
+      "o2_pct": [
+        21.0,
+        21.0
+      ],
+      "flow_cms": [
+        5.0,
+        40.0
+      ],
+      "diluents": [
+        "N2"
+      ],
+      "loi_pct": null
+    },
+    "key_phenomenon_and_finding": "Precursor investigation to ACME CLD Flame conducted in MSG/SPICE; characterized lifted laminar jet diffusion flames, flame stabilization heights, and blow-off/dilution limits in 0g where diluted weak flames remain stable at much lower fuel concentrations than in 1g",
+    "safety_implication": "Establishes baseline stabilization and dilution blowout limits for gaseous fuel leaks in ventilated spacecraft compartments prior to ACME CIR operations",
+    "hardware_and_rack_details": "ISS Microgravity Science Glovebox (MSG) with SPICE coflow wind-tunnel duct and laminar gas-jet nozzle",
+    "principal_investigators": "Marshall B. Long (PI, Yale Univ.); Co-I: Mitchell D. Smooke (Yale Univ.)",
+    "scientific_link_and_applications": "Direct pathfinder experiment for ACME Coflow Laminar Diffusion Flame (CLD Flame), linking MSG/SPICE diagnostics to ISS CIR ACME hardware",
+    "source_id": "NASA PSI (SLICE) | NASA/TP",
+    "official_identifiers_and_publications": "NASA PSI: SLICE; ISS Research Explorer: Structure & Liftoff In Combustion Experiment (SLICE)"
+  }
+]
