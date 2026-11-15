@@ -27,7 +27,9 @@ comparisons if different pairs have comparable measurements. Put the reason
 for leaving an indexed study out of the comparison in limitations.
 
 Return only a JSON object with status, summary, similarities, differences and
-limitations. Write plain text in the requested language. Summary is a short
+limitations. Write plain text directly in the language of the focus, ignoring
+quoted excerpts and study names. If no focus is given, use Russian.
+Keep experiment names and units as supplied. Summary is a short
 framing sentence and contains no new scientific claims. Each item of similarities
 and differences is {"text": "...", "citation_indices": [1, 2]}. Every item must
 reference supplied excerpt indices covering at least two different studies that
@@ -144,7 +146,6 @@ async def compare(request: CompareRequest) -> CompareResponse:
         raw = await llm.generate([
             {"role": "system", "content": PROMPT},
             {"role": "user", "content": json.dumps({
-                "language": "Russian" if russian else "English",
                 "study_ids": request.study_ids,
                 "focus": focus,
                 "evidence": evidence_payload(evidence),

@@ -87,11 +87,17 @@ async def request_id(request: Request, call_next):
 
 @app.exception_handler(StarletteHTTPException)
 async def http_error(request: Request, exc: HTTPException):
-    code, message = exc.detail if isinstance(exc.detail, tuple) else ('NOT_FOUND' if exc.status_code == 404 else 'HTTP_ERROR', str(exc.detail))
+    code, message = http_error_detail(exc)
     response = error(request, exc.status_code, code, message)
     if exc.headers:
         response.headers.update(exc.headers)
     return response
+
+
+def http_error_detail(exc: StarletteHTTPException) -> tuple[str, str]:
+    if isinstance(exc.detail, tuple):
+        return exc.detail
+    return ('NOT_FOUND' if exc.status_code == 404 else 'HTTP_ERROR', str(exc.detail))
 
 @app.exception_handler(RequestValidationError)
 async def validation_error(request: Request, exc: RequestValidationError):
@@ -139,21 +145,48 @@ async def run_assistant(
 @app.post('/api/v1/assistant/chat/stream', response_class=EventSourceResponse)
 async def chat_stream(payload: ChatRequest, request: Request) -> AsyncIterator[ServerSentEvent]:
     yield ServerSentEvent(event='accepted', data={'request_id': request.state.request_id})
+    events: asyncio.Queue[ServerSentEvent] = asyncio.Queue(maxsize=16)
+
+    async def emit(text: str) -> None:
+        await events.put(ServerSentEvent(event='delta', data={'text': text}))
+
+    async def produce() -> None:
+        await events.put(await finish_chat_stream(payload, request, emit))
+
+    task = asyncio.create_task(produce())
+    try:
+        while True:
+            event = await events.get()
+            yield event
+            if event.event != 'delta':
+                break
+    finally:
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+
+
+async def finish_chat_stream(
+    payload: ChatRequest, request: Request, emit: Callable[[str], Awaitable[None]],
+) -> ServerSentEvent:
     try:
         async with asyncio.timeout(CHAT_TIMEOUT_SECONDS):
-            result = await chat(payload)
-    except HTTPException as exc:
-        code, message = exc.detail
-        yield ServerSentEvent(event='error', data=error_payload(request, code, message))
-    except TimeoutError:
-        yield ServerSentEvent(event='error', data=error_payload(request, 'AI_TIMEOUT', 'Assistant request timed out'))
+            if payload.study_id is not None:
+                await repository.require_study(payload.study_id)
+            result = await ask(payload, on_delta=emit)
+    except StarletteHTTPException as exc:
+        code, message = http_error_detail(exc)
+    except (ProviderTimeout, TimeoutError):
+        code, message = 'AI_TIMEOUT', 'Assistant request timed out'
+    except ProviderUnavailable:
+        code, message = 'AI_UNAVAILABLE', 'Assistant unavailable'
     except (SQLAlchemyError, OSError):
-        yield ServerSentEvent(event='error', data=error_payload(request, 'DATABASE_UNAVAILABLE', 'Database unavailable'))
+        code, message = 'DATABASE_UNAVAILABLE', 'Database unavailable'
     except Exception:
         logging.getLogger(__name__).error('Unhandled stream error request_id=%s', request.state.request_id)
-        yield ServerSentEvent(event='error', data=error_payload(request, 'INTERNAL_ERROR', 'Internal server error'))
+        code, message = 'INTERNAL_ERROR', 'Internal server error'
     else:
-        yield ServerSentEvent(event='result', data=result)
+        return ServerSentEvent(event='result', data=result)
+    return ServerSentEvent(event='error', data=error_payload(request, code, message))
 
 @app.get('/health', response_model=Health)
 async def health(request: Request):

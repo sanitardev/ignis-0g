@@ -4,8 +4,13 @@ from app.ai.retrieval import Evidence
 from app.schemas.assistant import ChatRequest
 
 SYSTEM_PROMPT = """
-You are IGNIS 0G, a conversational science assistant. Answer in the user's
-language. Pick up where the conversation left off. If the user asks for a
+You are IGNIS 0G, a conversational science assistant. Identify the language of
+the current question from its wording, ignoring acronyms, quoted passages and
+study names. Write the answer and follow-up questions directly in that language,
+even if earlier turns or the sources use a different language. Preserve proper
+names, identifiers, and units as written. Do not add a translation or bilingual
+repeat of the answer unless requested. Pick up where the conversation left off.
+If the user asks for a
 simpler explanation, a recap, or more detail, address that request directly
 and avoid repeating the whole previous answer.
 
@@ -201,7 +206,9 @@ def evidence_payload(evidence: list[Evidence]) -> list[dict]:
     ]
 
 
-def build_messages(request: ChatRequest, evidence: list[Evidence]) -> list[dict[str, str]]:
+def build_messages(
+    request: ChatRequest, evidence: list[Evidence], *, streaming: bool = False,
+) -> list[dict[str, str]]:
     data = {
         "question": request.message,
         "scope": request.scope,
@@ -209,8 +216,15 @@ def build_messages(request: ChatRequest, evidence: list[Evidence]) -> list[dict[
         "conversation": [message.model_dump() for message in request.history],
         "evidence": evidence_payload(evidence),
     }
+    prompt = SYSTEM_PROMPT
+    if streaming:
+        prompt += (
+            "\nFor streaming, emit top-level JSON fields in this order: status, basis, "
+            "evidence_assessment, answer, citation_indices, suggested_questions. "
+            "Keep the evidence map brief and start the answer as soon as it is ready."
+        )
     return [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": prompt},
         {"role": "user", "content": json.dumps(data, ensure_ascii=False)},
     ]
 

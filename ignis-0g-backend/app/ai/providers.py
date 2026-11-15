@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 from time import monotonic
-from collections.abc import Sequence
-from typing import TYPE_CHECKING, Protocol
+from collections.abc import Awaitable, Callable, Sequence
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 from urllib.parse import urlsplit
 
 import httpx
@@ -15,6 +16,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger("uvicorn.error.rag")
 
 Message = dict[str, str]
+TextDelta = Callable[[str], Awaitable[None]]
 
 
 class ProviderUnavailable(Exception):
@@ -22,6 +24,10 @@ class ProviderUnavailable(Exception):
 
 
 class ProviderTimeout(ProviderUnavailable):
+    pass
+
+
+class StreamingUnsupported(ProviderUnavailable):
     pass
 
 
@@ -42,6 +48,11 @@ class LLMProvider(Protocol):
     async def generate(self, messages: Sequence[Message]) -> object: ...
 
 
+@runtime_checkable
+class StreamingLLMProvider(LLMProvider, Protocol):
+    async def generate_stream(self, messages: Sequence[Message], on_delta: TextDelta) -> object: ...
+
+
 class JsonAPI:
     def __init__(self, client: httpx.AsyncClient, base_url: str, key: str, timeout: float, retries: int):
         self.client = client
@@ -50,18 +61,21 @@ class JsonAPI:
         self.timeout = timeout
         self.retries = retries
 
-    async def post(self, path: str, payload: dict) -> dict:
+    def _headers(self) -> dict[str, str]:
         url = urlsplit(self.base_url)
         if url.scheme != "https" or not url.hostname or url.username or url.password or not self.key:
             raise ProviderUnavailable("Missing or invalid provider configuration")
+        return {"Authorization": f"Bearer {self.key}"}
 
+    async def post(self, path: str, payload: dict) -> dict:
+        headers = self._headers()
         for attempt in range(self.retries + 1):
             started = monotonic()
             try:
                 async with asyncio.timeout(self.timeout):
                     response = await self.client.post(
                         self.base_url + path,
-                        headers={"Authorization": f"Bearer {self.key}"},
+                        headers=headers,
                         json=payload, timeout=self.timeout, follow_redirects=False,
                     )
             except (TimeoutError, httpx.TimeoutException):
@@ -91,3 +105,38 @@ class JsonAPI:
                 raise failure("Provider request failed") from None
             await asyncio.sleep(0.15 * (2 ** attempt))
         raise ProviderUnavailable
+
+    async def stream(self, path: str, payload: dict, on_event: Callable[[dict], Awaitable[None]]) -> None:
+        headers = {**self._headers(), "Accept": "text/event-stream"}
+        try:
+            async with asyncio.timeout(self.timeout):
+                async with self.client.stream(
+                    "POST", self.base_url + path, headers=headers, json=payload,
+                    timeout=self.timeout, follow_redirects=False,
+                ) as response:
+                    if response.status_code in {400, 405, 415, 422, 501}:
+                        raise StreamingUnsupported("Provider rejected streaming request")
+                    if response.status_code in {408, 504}:
+                        raise ProviderTimeout("Provider timed out")
+                    if not response.is_success:
+                        raise ProviderUnavailable(f"Provider returned HTTP {response.status_code}")
+                    if response.headers.get("content-type", "").split(";")[0].strip() != "text/event-stream":
+                        raise StreamingUnsupported("Provider did not return an event stream")
+
+                    data = []
+                    async for line in response.aiter_lines():
+                        if line.startswith("data:"):
+                            data.append(line[5:].lstrip(" "))
+                        elif not line and data:
+                            value = "\n".join(data)
+                            data.clear()
+                            if value == "[DONE]":
+                                return
+                            event = json.loads(value)
+                            if not isinstance(event, dict) or event.get("error") is not None:
+                                raise ProviderUnavailable("Provider stream reported an error")
+                            await on_event(event)
+        except (TimeoutError, httpx.TimeoutException):
+            raise ProviderTimeout("Provider stream timed out") from None
+        except (httpx.TransportError, ValueError):
+            raise ProviderUnavailable("Provider stream could not be read") from None

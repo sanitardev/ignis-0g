@@ -47,7 +47,9 @@ def test_chat_event_stream(monkeypatch, timeout):
 
     main = importlib.import_module('app.main')
 
-    async def ask_stub(payload):
+    async def ask_stub(payload, *, on_delta):
+        await on_delta('First ')
+        await on_delta('fragment')
         if timeout:
             raise ProviderTimeout()
         return insufficient_evidence(payload.message)
@@ -63,17 +65,49 @@ def test_chat_event_stream(monkeypatch, timeout):
         assert response.status_code == 200
         assert response.headers['content-type'].startswith('text/event-stream')
         assert response.headers['x-accel-buffering'] == 'no'
-        events = {}
+        events = []
         for block in response.text.replace('\r\n', '\n').strip().split('\n\n'):
             fields = dict(line.split(': ', 1) for line in block.splitlines())
-            events[fields['event']] = json.loads(fields['data'])
-        assert events['accepted']['request_id'] == response.headers['x-request-id']
+            events.append((fields['event'], json.loads(fields['data'])))
+        assert events[0] == ('accepted', {'request_id': response.headers['x-request-id']})
+        assert events[1:3] == [('delta', {'text': 'First '}), ('delta', {'text': 'fragment'})]
+        assert len(events) == 4
         if timeout:
-            assert list(events) == ['accepted', 'error']
-            assert events['error']['error']['code'] == 'AI_TIMEOUT'
+            assert events[-1][0] == 'error'
+            assert events[-1][1]['error']['code'] == 'AI_TIMEOUT'
         else:
-            assert list(events) == ['accepted', 'result']
-            assert events['result']['status'] == 'insufficient_evidence'
+            assert events[-1][0] == 'result'
+            assert events[-1][1]['status'] == 'insufficient_evidence'
+
+    asyncio.run(run())
+
+
+def test_closing_chat_stream_cancels_generation(monkeypatch):
+    from starlette.requests import Request
+    from app.schemas.assistant import ChatRequest
+
+    main = importlib.import_module('app.main')
+
+    async def run():
+        cancelled = asyncio.Event()
+
+        async def blocking_model(payload, *, on_delta):
+            try:
+                await on_delta('fragment')
+                await asyncio.Future()
+            finally:
+                cancelled.set()
+
+        monkeypatch.setattr(main, 'ask', blocking_model)
+        request = Request({'type': 'http'})
+        request.state.request_id = 'test'
+        stream = main.chat_stream(ChatRequest(message='Explain results'), request)
+        try:
+            assert (await anext(stream)).event == 'accepted'
+            assert (await asyncio.wait_for(anext(stream), timeout=1)).event == 'delta'
+        finally:
+            await stream.aclose()
+        assert cancelled.is_set()
 
     asyncio.run(run())
 
@@ -81,6 +115,7 @@ def test_chat_event_stream(monkeypatch, timeout):
 @pytest.mark.parametrize(('message', 'expected_status', 'greeting'), [
     ('Привет!', 200, 'Привет!'),
     ('Hello.', 200, 'Hello!'),
+    ('Сәлем!', 200, 'Сәлем!'),
     ('Привет, что изучали в FLEX-1?', 504, None),
 ])
 def test_chat_with_unresponsive_model(monkeypatch, message, expected_status, greeting):

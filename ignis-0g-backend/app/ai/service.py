@@ -5,11 +5,15 @@ from time import monotonic
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic_core import from_json
 
 from app.ai.embeddings import vector_parameter
 from app.ai.ingestion import index_revision
+from app.ai.language import notice_language
 from app.ai.prompts import build_messages, rewrite_messages
-from app.ai.providers import EmbeddingProvider, LLMProvider, ProviderUnavailable, RerankerProvider
+from app.ai.providers import (
+    EmbeddingProvider, LLMProvider, ProviderUnavailable, RerankerProvider, StreamingLLMProvider, TextDelta,
+)
 from app.ai.retrieval import Evidence, PgVectorRepository, named_studies, section_pattern
 from app.ai.settings import RagSettings, settings_from_env
 from app.ai.wiring import configured_providers
@@ -31,11 +35,11 @@ class GroundedAnswer(BaseModel):
 def insufficient_evidence(
     question: str = "", *, suggestions: list[str] | None = None,
 ) -> ChatResponse:
-    russian = not question or bool(re.search(r"[А-Яа-яЁё]", question))
-    message = (
-        "В доступных источниках пока нет сведений, на которые можно опереться для ответа."
-        if russian else "I couldn’t find enough evidence in the available sources to answer this question."
-    )
+    message = {
+        "ru": "В доступных источниках пока нет сведений, на которые можно опереться для ответа.",
+        "kk": "Қолжетімді дереккөздерде бұл сұраққа жауап беруге жеткілікті мәлімет жоқ.",
+        "en": "I couldn’t find enough evidence in the available sources to answer this question.",
+    }[notice_language(question)]
     return ChatResponse(
         status="insufficient_evidence",
         answer=message,
@@ -50,11 +54,11 @@ def invalid_answer(question: str, reason: str) -> ChatResponse:
     # as a lack of scientific evidence. Log the cause without source content.
     logging.getLogger(__name__).warning("Answer validation failed: %s", reason)
     response = insufficient_evidence(question)
-    response.answer = (
-        "Не удалось проверить формат ответа и ссылки на источники. Повторите запрос."
-        if re.search(r"[А-Яа-яЁё]", question)
-        else "Could not verify the answer format and source references. Please try again."
-    )
+    response.answer = {
+        "ru": "Не удалось проверить формат ответа и ссылки на источники. Повторите запрос.",
+        "kk": "Жауаптың пішімін және дереккөздерге сілтемелерді тексеру мүмкін болмады. Қайта сұрап көріңіз.",
+        "en": "Could not verify the answer format and source references. Please try again.",
+    }[notice_language(question)]
     return response
 
 
@@ -69,12 +73,12 @@ class RagService:
         self.settings = settings
         self.repository = repository
 
-    async def ask(self, request: ChatRequest) -> ChatResponse:
+    async def ask(self, request: ChatRequest, *, on_delta: TextDelta | None = None) -> ChatResponse:
         started = monotonic()
         revision = index_revision(self.embedding, self.settings)
         if not await self.repository.has_chunks(request, revision):
             logger.info("rag outcome=no_index")
-            return validate_answer(await self.llm.generate(build_messages(request, [])), [], request.message)
+            return await self._answer(request, [], on_delta)
 
         query = request.message
         if request.history and needs_rewrite(request.message):
@@ -98,7 +102,7 @@ class RagService:
         evidence = await self.repository.search(search_request, vector, revision, self.settings.candidate_limit)
         logger.info("rag stage=retrieval candidates=%d", len(evidence))
         if not evidence:
-            return validate_answer(await self.llm.generate(build_messages(request, [])), [], request.message)
+            return await self._answer(request, [], on_delta)
         if self.reranker:
             try:
                 async with asyncio.timeout(2.5):
@@ -114,17 +118,53 @@ class RagService:
 
         context = select_context(evidence, self.settings.context_limit, question=query, diversify=request.scope == "global")
         logger.info("rag stage=generation context_count=%d", len(context))
-        result = validate_answer(await self.llm.generate(build_messages(request, context)), context, request.message)
+        result = await self._answer(request, context, on_delta)
         logger.info("rag outcome=%s citations=%d elapsed_ms=%d", result.status, len(result.citations), (monotonic() - started) * 1000)
         return result
 
+    async def _answer(
+        self, request: ChatRequest, context: list[Evidence], on_delta: TextDelta | None,
+    ) -> ChatResponse:
+        if on_delta is not None and isinstance(self.llm, StreamingLLMProvider):
+            raw = await self.llm.generate_stream(build_messages(request, context, streaming=True), answer_deltas(on_delta))
+        else:
+            raw = await self.llm.generate(build_messages(request, context))
+        return validate_answer(raw, context, request.message)
 
-async def ask(request: ChatRequest) -> ChatResponse:
+
+def answer_deltas(emit: TextDelta) -> TextDelta:
+    """Extract only the user-facing text from incomplete JSON."""
+    buffer = ""
+    previous = ""
+
+    async def feed(fragment: str) -> None:
+        nonlocal buffer, previous
+        buffer += fragment
+        value = buffer.lstrip()
+        if value.startswith("```json"):
+            value = value[7:].lstrip()
+        try:
+            partial = from_json(value, allow_partial="trailing-strings")
+        except ValueError:
+            return
+        if not isinstance(partial, dict) or partial.get("status") != "answered":
+            return
+        answer = partial.get("answer")
+        if isinstance(answer, str) and answer.startswith(previous) and answer != previous:
+            await emit(answer[len(previous):])
+            previous = answer
+
+    return feed
+
+
+async def ask(request: ChatRequest, *, on_delta: TextDelta | None = None) -> ChatResponse:
     message = request.message.casefold().rstrip(".!?…").rstrip()
     if message in {"привет", "здравствуй", "здравствуйте", "доброе утро", "добрый день", "добрый вечер"}:
         greeting = "Привет! Чем помочь? Можно спросить об экспериментах NASA или горении в микрогравитации."
     elif message in {"hi", "hello", "hey", "good morning", "good afternoon", "good evening"}:
         greeting = "Hello! How can I help? Ask me about NASA experiments or combustion in microgravity."
+    elif message in {"сәлем", "сәлеметсіз бе", "қайырлы таң", "қайырлы күн", "қайырлы кеш"}:
+        greeting = "Сәлем! Қалай көмектесе аламын? NASA тәжірибелері немесе микрогравитациядағы жану туралы сұрай аласыз."
     else:
         greeting = None
 
@@ -139,7 +179,7 @@ async def ask(request: ChatRequest) -> ChatResponse:
 
     settings = settings_from_env()
     async with configured_providers(settings) as (embedding, reranker, llm):
-        return await RagService(embedding, reranker, llm, settings, PgVectorRepository()).ask(request)
+        return await RagService(embedding, reranker, llm, settings, PgVectorRepository()).ask(request, on_delta=on_delta)
 
 
 def needs_rewrite(question: str) -> bool:
@@ -224,18 +264,20 @@ def validate_answer(raw: object, evidence: list[Evidence], question: str) -> Cha
     if result.basis == "general_knowledge":
         if not answer or indices or markers or re.search(r"<(?:/?[A-Za-z]|!--)", answer):
             return invalid_answer(question, "ungrounded_general_answer")
-        label = (
-            "Общие знания — пояснение вне загруженных исследований."
-            if re.search(r"[А-Яа-яЁё]", question)
-            else "General knowledge — explanation outside the uploaded studies."
-        )
+        label = {
+            "ru": "Общие знания — пояснение вне загруженных исследований.",
+            "kk": "Жалпы мәлімет — бұл түсіндірме жүктелген зерттеулерге негізделмеген.",
+            "en": "General knowledge — explanation outside the uploaded studies.",
+        }[notice_language(question)]
         return ChatResponse(status="answered", answer=f"{label}\n\n{answer}", citations=[],
                             related_study_ids=[], suggested_questions=suggestions)
     if answer and not markers and indices and all(1 <= index <= len(evidence) for index in indices):
         # Some models populate the structured references but omit inline ones.
         # Preserve those references as answer-level sources; do not guess which
         # source supports each sentence, or silently discard mismatched markers.
-        label = "Источники ответа" if re.search(r"[А-Яа-яЁё]", question) else "Answer sources"
+        label = {"ru": "Источники ответа", "kk": "Жауаптың дереккөздері", "en": "Answer sources"}[
+            notice_language(question)
+        ]
         markers = [str(index) for index in indices]
         answer += f"\n\n{label}: " + " ".join(f"[{marker}]" for marker in markers)
     if (
